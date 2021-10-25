@@ -1,4 +1,5 @@
 import 'package:app/Global_Helpers/theme.dart';
+import 'package:app/LoginScreen/Register.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -114,7 +115,11 @@ class _LoginPageState extends State<LoginPage> {
                                     text: 'Create',
                                     recognizer: TapGestureRecognizer()
                                       ..onTap = () {
-                                        // Navigator.push(context, MaterialPageRoute(builder: (context) => RegistrationPage()));
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    RegistrationPage()));
                                       },
                                     style: TextStyle(
                                         fontWeight: FontWeight.bold,
