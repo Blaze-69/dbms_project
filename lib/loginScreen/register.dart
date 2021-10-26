@@ -1,8 +1,14 @@
-import 'package:app/Global_Helpers/theme.dart';
+import 'dart:convert';
+
 import 'package:app/LoginScreen/header.dart';
+import 'package:app/globalHelpers/global-helper.dart';
+import 'package:app/globalHelpers/theme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hexcolor/hexcolor.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RegistrationPage extends StatefulWidget {
   @override
@@ -15,6 +21,58 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final _formKey = GlobalKey<FormState>();
   bool checkedValue = false;
   bool checkboxValue = false;
+  String userPassword;
+  String userEmailId;
+  String userName;
+  String userdob;
+  String userAddress;
+
+  Future register() async {
+    String link = 'http://localhost:5000/api/register';
+    final body = {
+      "userInfo":{
+        "email": userEmailId,
+        "password": userPassword,
+        "dob":userdob,
+        "name":userName,
+        "address": userAddress
+
+      }
+    };
+    final response = await GlobalHelper.checkAccessTokenForPost(link,body);
+    if (response.statusCode == 400) {
+      var responseJson = json.decode(response.body);
+      if (responseJson['msg'] == "Access token expired") {
+        await GlobalHelper.refresh();
+        register();
+      } else {
+        Fluttertoast.showToast(
+            msg: responseJson['msg'],
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 2,
+            backgroundColor: Colors.red,
+            webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
+            textColor: Colors.white,
+            fontSize: 16.0);
+      }
+    } else {
+      var responseJson = json.decode(response.body);
+      print(responseJson);
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString("accessToken",  responseJson["accessToken"]);
+      await prefs.setString("refreshToken", responseJson["refreshToken"]);
+      Fluttertoast.showToast(
+          msg: responseJson['msg'],
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 2,
+          webBgColor: "linear-gradient(to right, #32CD32  , #32CD32)",
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,29 +100,21 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         ),
                         Container(
                           child: TextFormField(
+                            onSaved: (val) => userName= val,
                             decoration: ThemeHelper().textInputDecoration(
-                                'First Name', 'Enter your first name'),
-                          ),
-                          decoration: ThemeHelper().inputBoxDecorationShaddow(),
-                        ),
-                        SizedBox(
-                          height: 30,
-                        ),
-                        Container(
-                          child: TextFormField(
-                            decoration: ThemeHelper().textInputDecoration(
-                                'Last Name', 'Enter your last name'),
+                                'Name', 'Enter your name'),
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
                         SizedBox(height: 20.0),
                         Container(
                           child: TextFormField(
+                            onSaved: (val) => userEmailId= val,
                             decoration: ThemeHelper().textInputDecoration(
                                 "E-mail address", "Enter your email"),
                             keyboardType: TextInputType.emailAddress,
                             validator: (val) {
-                              if (!(val!.isEmpty) &&
+                              if (!(val.isEmpty) &&
                                   !RegExp(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
                                       .hasMatch(val)) {
                                 return "Enter a valid email address";
@@ -77,12 +127,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         SizedBox(height: 20.0),
                         Container(
                           child: TextFormField(
+                            onSaved: (val) => userAddress= val,
                             decoration: ThemeHelper().textInputDecoration(
                                 "Address", "Enter your Address"),
                             keyboardType: TextInputType.phone,
                             validator: (val) {
-                              if (!(val!.isEmpty) &&
-                                  !RegExp(r"^(\d+)*$").hasMatch(val)) {
+                              if (val.isEmpty) {
                                 return "Enter a valid Address";
                               }
                               return null;
@@ -93,11 +143,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         SizedBox(height: 20.0),
                         Container(
                           child: TextFormField(
+                            onSaved: (val) => userdob= val,
                             decoration: ThemeHelper().textInputDecoration(
                                 "Date of Birth", "Enter your Date of Birth"),
                             keyboardType: TextInputType.phone,
                             validator: (val) {
-                              if (!(val!.isEmpty) &&
+                              if (!(val.isEmpty) &&
                                   !RegExp(r"^(\d+)*$").hasMatch(val)) {
                                 return "Enter a valid Date of Birth";
                               }
@@ -109,11 +160,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         SizedBox(height: 20.0),
                         Container(
                           child: TextFormField(
+                            onSaved: (val) => userPassword= val,
                             obscureText: true,
                             decoration: ThemeHelper().textInputDecoration(
                                 "Password*", "Enter your password"),
                             validator: (val) {
-                              if (val!.isEmpty) {
+                              if (val.isEmpty) {
                                 return "Please enter your password";
                               }
                               return null;
@@ -132,7 +184,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                         value: checkboxValue,
                                         onChanged: (value) {
                                           setState(() {
-                                            checkboxValue = value!;
+                                            checkboxValue = value;
                                             state.didChange(value);
                                           });
                                         }),
@@ -182,15 +234,16 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                 ),
                               ),
                             ),
-                            onPressed: () {
-                              // if (_formKey.currentState!.validate()) {
-                              // Navigator.of(context).pushAndRemoveUntil(
-                              //     MaterialPageRoute(
-                              //         builder: (context) => ProfilePage()
-                              //     ),
-                              // (Route<dynamic> route) => false
-                              //   );
-                              // }
+                            onPressed: () async {
+                              if (validate()) {
+                                Loader.show(context,
+                                    progressIndicator: CircularProgressIndicator(),
+                                    themeData: Theme.of(context)
+                                        .copyWith(accentColor: Colors.black38),
+                                    overlayColor: Color(0x99E8EAF6));
+                                await register();
+                                Loader.hide();
+                              }
                             },
                           ),
                         ),
@@ -205,5 +258,13 @@ class _RegistrationPageState extends State<RegistrationPage> {
         ),
       ),
     );
+  }
+  bool validate() {
+    var valid = _formKey.currentState.validate();
+    if (valid) _formKey.currentState.save();
+    print(userEmailId);
+    print(userPassword);
+
+    return valid;
   }
 }
