@@ -1,22 +1,70 @@
-import 'package:app/Global_Helpers/theme.dart';
-import 'package:app/LoginScreen/Register.dart';
+import 'dart:convert';
+
+import 'package:app/globalHelpers/global-helper.dart';
+import 'package:app/globalHelpers/theme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-
+import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'Register.dart';
 import 'header.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
 
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
+  String userPassword;
+  String userEmailId;
   double _headerHeight = 250;
-  Key _formKey = GlobalKey<FormState>();
-
+  final _formKey = GlobalKey<FormState>();
+  Future login() async {
+    String link = 'http://localhost:5000/api/login';
+    final body = {
+      "userInfo":{
+        "email": userEmailId,
+        "password": userPassword
+      }
+    };
+    final response = await GlobalHelper.checkAccessTokenForPost(link,body);
+    if (response.statusCode == 400) {
+      var responseJson = json.decode(response.body);
+      if (responseJson['msg'] == "Access token expired") {
+        await GlobalHelper.refresh();
+        login();
+      } else {
+        Fluttertoast.showToast(
+            msg: responseJson['msg'],
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 2,
+            backgroundColor: Colors.red,
+            webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
+            textColor: Colors.white,
+            fontSize: 16.0);
+      }
+    } else {
+      var responseJson = json.decode(response.body);
+      print(responseJson);
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString("accessToken",  responseJson["accessToken"]);
+      await prefs.setString("refreshToken", responseJson["refreshToken"]);
+      Fluttertoast.showToast(
+          msg: responseJson['msg'],
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 2,
+          webBgColor: "linear-gradient(to right, #32CD32  , #32CD32)",
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0);
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,17 +99,35 @@ class _LoginPageState extends State<LoginPage> {
                           child: Column(
                             children: [
                               Container(
-                                child: TextField(
+                                child: TextFormField(
+                                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                                  onSaved: (val) => userEmailId = val,
+                                  validator: (val) {
+                                    if (!(val.isEmpty) &&
+                                    !RegExp(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
+                                        .hasMatch(val)) {
+                                    return "Enter a valid email address";
+                                    }
+                                    return null;
+                                    },
                                   decoration: ThemeHelper().textInputDecoration(
-                                      'User Name', 'Enter your user name'),
+                                      'Email', 'Enter your email'),
                                 ),
                                 decoration:
                                     ThemeHelper().inputBoxDecorationShaddow(),
                               ),
                               SizedBox(height: 30.0),
                               Container(
-                                child: TextField(
+                                child: TextFormField(
                                   obscureText: true,
+                                  onSaved: (val) => userPassword= val,
+                                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                                  validator: (val) {
+                                    if (val.isEmpty) {
+                                      return "Please enter your password";
+                                    }
+                                    return null;
+                                  },
                                   decoration: ThemeHelper().textInputDecoration(
                                       'Password', 'Enter your password'),
                                 ),
@@ -100,9 +166,16 @@ class _LoginPageState extends State<LoginPage> {
                                           color: Colors.white),
                                     ),
                                   ),
-                                  onPressed: () {
-                                    //After successful login we will redirect to profile page. Let's create profile page now
-                                    // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfilePage()));
+                                  onPressed: () async {
+                                    if (validate()) {
+                                      Loader.show(context,
+                                          progressIndicator: CircularProgressIndicator(),
+                                          themeData: Theme.of(context)
+                                              .copyWith(accentColor: Colors.black38),
+                                          overlayColor: Color(0x99E8EAF6));
+                                      await login();
+                                      Loader.hide();
+                                    }
                                   },
                                 ),
                               ),
@@ -136,5 +209,13 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+  bool validate() {
+    var valid = _formKey.currentState.validate();
+    if (valid) _formKey.currentState.save();
+    print(userEmailId);
+    print(userPassword);
+
+    return valid;
   }
 }
