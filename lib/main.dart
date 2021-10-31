@@ -1,3 +1,4 @@
+import 'package:app/globalHelpers/routes.dart';
 import 'package:app/homeScreen/HomeScreen.dart';
 import 'package:app/loginScreen/splashScreen.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: HomeScreen());
+        initialRoute: '/',
+        onGenerateRoute: Routes.generateRoute);
   }
 }

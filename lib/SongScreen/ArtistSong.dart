@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 
 class ArtistSongList extends StatefulWidget {
-  String title;
-  var image;
-  ArtistSongList(this.title, this.image);
+  var args;
+  ArtistSongList(this.args);
+
   @override
   _ArtistSongListState createState() => _ArtistSongListState();
 }
 
 class _ArtistSongListState extends State<ArtistSongList> {
   List<Song> listSong = [];
-
+  String title;
+  var image;
   @override
   void initState() {
+    title = widget.args['artist'];
+    image = widget.args['image'];
     listSong.add(Song(title: "No tears left to cry", duration: "5:20"));
     listSong.add(Song(title: "Imagine", duration: "3:20"));
     listSong.add(Song(title: "Into you", duration: "4:12"));
@@ -51,7 +54,7 @@ class _ArtistSongListState extends State<ArtistSongList> {
               children: <Widget>[
                 Positioned(
                   child: Text(
-                    widget.title,
+                    title,
                     style: TextStyle(
                       color: Colors.white,
                       fontFamily: "CoralPen",
@@ -184,7 +187,7 @@ class _ArtistSongListState extends State<ArtistSongList> {
           bottomLeft: Radius.circular(48.0),
         ),
         image: DecorationImage(
-          image: AssetImage(widget.image),
+          image: AssetImage(image),
           fit: BoxFit.cover,
         ),
       ),

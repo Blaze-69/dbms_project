@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:app/LoginScreen/header.dart';
 import 'package:app/globalHelpers/global-helper.dart';
 import 'package:app/globalHelpers/theme.dart';
+import 'package:app/homeScreen/HomeScreen.dart';
 import 'package:date_field/date_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -72,6 +73,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           backgroundColor: Colors.red,
           textColor: Colors.white,
           fontSize: 16.0);
+      Navigator.of(context).pushNamed('/homeScreen');
     }
   }
 

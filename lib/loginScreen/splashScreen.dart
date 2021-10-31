@@ -1,11 +1,8 @@
 import 'dart:async';
-import 'package:app/loginScreen/loginPage.dart';
-import 'package:app/loginScreen/register.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
-
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -21,9 +18,10 @@ class _SplashScreenState extends State<SplashScreen> {
       isloggedIn = true;
     }
   }
+
   _SplashScreenState() {
     new Timer(const Duration(milliseconds: 2000), () {
-        _navigatetohome();
+      _navigatetohome();
     });
 
     new Timer(Duration(milliseconds: 10), () {
@@ -40,10 +38,13 @@ class _SplashScreenState extends State<SplashScreen> {
     checkLoggedIn();
     super.initState();
   }
-  _navigatetohome() async{
-    await Future.delayed(Duration(milliseconds: 1500),(){});
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>(isloggedIn != false) ? RegistrationPage(): LoginPage()));
+
+  _navigatetohome() async {
+    await Future.delayed(Duration(milliseconds: 1500), () {});
+    Navigator.of(context)
+        .pushNamed(isloggedIn == false ? '/loginPage' : '/homeScreen');
   }
+
   @override
   Widget build(BuildContext context) {
     return Container(

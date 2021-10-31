@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:app/HomeScreen/models/PlayList.dart';
-import 'package:app/HomeScreen/models/songList.dart';
-import 'package:app/SongScreen/ArtistSong.dart';
+import 'package:app/globalHelpers/global-helper.dart';
+import 'package:app/models/songModel.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const kPrimaryColor = Color(0xff0968B0);
 const kSecondaryColor = Color(0xff7ec8e3);
@@ -16,6 +20,37 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  List<Song> parseList(String responseBody) {
+    final parsed =
+        jsonDecode(responseBody)["songsList"].cast<Map<String, dynamic>>();
+    return parsed.map<Song>((json) => Song.fromJson(json)).toList();
+  }
+
+  Future _fetchSongs() async {
+    String link = 'http://localhost:5000/api/allSongs';
+    final response = await GlobalHelper.checkAccessTokenForGet(link);
+    if (response.statusCode == 400) {
+      var responseJson = json.decode(response.body);
+      if (responseJson['msg'] == "Access token expired") {
+        await GlobalHelper.refresh();
+        _fetchSongs();
+      } else {
+        Fluttertoast.showToast(
+            msg: responseJson['msg'],
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 2,
+            backgroundColor: Colors.red,
+            webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
+            textColor: Colors.white,
+            fontSize: 16.0);
+      }
+    } else {
+      var list = parseList(response.body);
+      return list;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -24,10 +59,6 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text(
           'Discover',
-          style: Theme.of(context)
-              .textTheme
-              .headline4
-              .copyWith(fontWeight: FontWeight.bold, color: kPrimaryColor),
         ),
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -71,13 +102,27 @@ class _HomeScreenState extends State<HomeScreen> {
         Container(
           height: 0.35 * size.height,
           width: MediaQuery.of(context).size.width,
-          child: ListView.builder(
-            itemCount: songs.length,
-            itemBuilder: (context, index) => _buildSonglistItem(
-              image: songs[index].image,
-              title: songs[index].songName,
-              subtitle: songs[index].artist,
-            ),
+          child: FutureBuilder(
+            future: _fetchSongs(),
+            builder: (context, AsyncSnapshot snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                List<Song> items = snapshot.data;
+                if (snapshot.hasData) {
+                  return ListView.builder(
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        return _buildSonglistItem(
+                          image: "assets/G.jpg",
+                          title: items[index].title,
+                          subtitle: items[index].artist,
+                        );
+                      });
+                }
+              }
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            },
           ),
         )
       ],
@@ -185,10 +230,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildPlaylistItem({String artist, String image}) {
     return InkWell(
       onTap: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => ArtistSongList(artist, image)));
+        Navigator.of(context).pushNamed('/artistSongList',
+            arguments: {'artist': artist, 'image': image});
       },
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
