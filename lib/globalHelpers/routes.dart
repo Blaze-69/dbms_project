@@ -3,6 +3,7 @@ import 'package:app/homeScreen/HomeScreen.dart';
 import 'package:app/loginScreen/loginPage.dart';
 import 'package:app/loginScreen/register.dart';
 import 'package:app/loginScreen/splashScreen.dart';
+import 'package:app/profileSection/profileSection.dart';
 import 'package:flutter/material.dart';
 
 class Routes {
@@ -28,6 +29,10 @@ class Routes {
       case '/artistSongList':
         return MaterialPageRoute(
           builder: (_) => ArtistSongList(args),
+        );
+      case '/profile':
+        return MaterialPageRoute(
+          builder: (_) => Profile(),
         );
       default:
         return _errorRoute();

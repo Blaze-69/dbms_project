@@ -65,10 +65,15 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.all(12.0),
-            child: Icon(
-              Icons.account_circle,
-              color: kPrimaryColor,
-              size: 30,
+            child: InkWell(
+              onTap: () {
+                Navigator.of(context).pushNamed('/profile');
+              },
+              child: Icon(
+                Icons.account_circle,
+                color: kPrimaryColor,
+                size: 30,
+              ),
             ),
           )
         ],
