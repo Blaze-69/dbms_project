@@ -59,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text(
           'Discover',
+          style: TextStyle(color: Colors.black),
         ),
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -116,11 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   return ListView.builder(
                       itemCount: items.length,
                       itemBuilder: (context, index) {
-                        return _buildSonglistItem(
-                          image: "assets/G.jpg",
-                          title: items[index].title,
-                          subtitle: items[index].artist,
-                        );
+                        return _buildSonglistItem(items[index]);
                       });
                 }
               }
@@ -279,16 +276,23 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSonglistItem({String image, String title, String subtitle}) {
-    return ListTile(
-      title: Text(title),
-      subtitle: Text(subtitle),
-      leading: Container(
-        height: 50,
-        width: 50,
-        decoration: BoxDecoration(
-            image: DecorationImage(image: AssetImage(image), fit: BoxFit.fill),
-            borderRadius: BorderRadius.circular(10.0)),
+  Widget _buildSonglistItem(Song selectedSong) {
+    return InkWell(
+      onTap: () {
+        Navigator.of(context)
+            .pushNamed('/musicPlayer', arguments: selectedSong);
+      },
+      child: ListTile(
+        title: Text(selectedSong.title),
+        subtitle: Text(selectedSong.artist),
+        leading: Container(
+          height: 50,
+          width: 50,
+          decoration: BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage("assets/G.jpg"), fit: BoxFit.fill),
+              borderRadius: BorderRadius.circular(10.0)),
+        ),
       ),
     );
   }

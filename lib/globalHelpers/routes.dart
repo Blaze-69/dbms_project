@@ -1,8 +1,10 @@
 import 'package:app/SongScreen/ArtistSong.dart';
+import 'package:app/SongScreen/MusicPlayer.dart';
 import 'package:app/homeScreen/HomeScreen.dart';
 import 'package:app/loginScreen/loginPage.dart';
 import 'package:app/loginScreen/register.dart';
 import 'package:app/loginScreen/splashScreen.dart';
+import 'package:app/profileSection/profileItems/changePassword.dart';
 import 'package:app/profileSection/profileSection.dart';
 import 'package:flutter/material.dart';
 
@@ -33,6 +35,15 @@ class Routes {
       case '/profile':
         return MaterialPageRoute(
           builder: (_) => Profile(),
+        );
+      case '/changePassword':
+        return MaterialPageRoute(
+          builder: (_) => ChangePassword(),
+        );
+
+      case '/musicPlayer':
+        return MaterialPageRoute(
+          builder: (_) => MusicPlayer(args),
         );
       default:
         return _errorRoute();

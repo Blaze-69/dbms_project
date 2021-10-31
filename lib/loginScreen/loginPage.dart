@@ -29,6 +29,7 @@ class _LoginPageState extends State<LoginPage> {
       "userInfo": {"email": userEmailId, "password": userPassword}
     };
     final response = await GlobalHelper.checkAccessTokenForPost(link, body);
+
     if (response.statusCode == 400) {
       var responseJson = json.decode(response.body);
       if (responseJson['msg'] == "Access token expired") {
@@ -60,7 +61,8 @@ class _LoginPageState extends State<LoginPage> {
           backgroundColor: Colors.red,
           textColor: Colors.white,
           fontSize: 16.0);
-      Navigator.of(context).pushNamed('/homeScreen');
+      Navigator.of(context).pushNamedAndRemoveUntil(
+          '/homeScreen', (Route<dynamic> route) => false);
     }
   }
 

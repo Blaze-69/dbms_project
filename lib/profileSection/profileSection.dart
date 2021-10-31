@@ -1,8 +1,6 @@
 import 'package:app/globalHelpers/global-helper.dart';
 import 'package:app/profileSection/profileListItem.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 
@@ -15,25 +13,7 @@ class _ProfileState extends State<Profile> {
   String profileImageUri;
   String profileName;
 
-  Future refresh() async {
-    String link = 'http://localhost:5000/api/allSongs';
-    final response = await GlobalHelper.checkAccessTokenForGet(link);
-    if (response.statusCode == 200) {
-      final responseJson = json.decode(response.body);
-      if (responseJson['msg'] == "Refresh token expired, Please Login again!") {
-        Fluttertoast.showToast(
-            msg: "Refresh token expired, Please Login again!",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.CENTER,
-            timeInSecForIosWeb: 1,
-            backgroundColor: Colors.red,
-            textColor: Colors.white,
-            fontSize: 16.0);
-      }
-    } else {
-      print(json.decode(response.body)["msg"]);
-    }
-  }
+  Future refresh() async {}
 
   void initState() {
     super.initState();
@@ -45,6 +25,7 @@ class _ProfileState extends State<Profile> {
         appBar: AppBar(
           title: Text("Profile"),
         ),
+        backgroundColor: Colors.black,
         body: Container(
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
@@ -69,10 +50,12 @@ class _ProfileState extends State<Profile> {
               SizedBox(height: 20),
               Text(
                 "Draco9421",
+                style: TextStyle(color: Colors.white),
               ),
               SizedBox(height: 5),
               Text(
                 "qwerty@gmail.com",
+                style: TextStyle(color: Colors.white),
               ),
               SizedBox(height: 20),
               Expanded(
@@ -91,12 +74,9 @@ class _ProfileState extends State<Profile> {
                     ProfileListItems(
                       icon: Icons.password,
                       text: 'Change Password',
-                      onPressed: () {},
-                    ),
-                    ProfileListItems(
-                      icon: Icons.notifications,
-                      text: 'Notification',
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.of(context).pushNamed('/changePassword');
+                      },
                     ),
                     ProfileListItems(
                       icon: Icons.security,

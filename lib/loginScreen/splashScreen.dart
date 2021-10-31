@@ -12,7 +12,7 @@ class _SplashScreenState extends State<SplashScreen> {
   var isloggedIn = false;
   checkLoggedIn() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    final accessToken = await prefs.get("accessToken");
+    final accessToken = prefs.get("accessToken");
     print("access token $accessToken");
     if (accessToken != null) {
       isloggedIn = true;
@@ -34,7 +34,6 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     checkLoggedIn();
     super.initState();
   }
@@ -50,10 +49,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return Container(
       decoration: new BoxDecoration(
         gradient: new LinearGradient(
-          colors: [
-            Theme.of(context).accentColor,
-            Theme.of(context).primaryColor
-          ],
+          colors: [Theme.of(context).primaryColor],
           begin: const FractionalOffset(0, 0),
           end: const FractionalOffset(1.0, 0.0),
           stops: [0.0, 1.0],
