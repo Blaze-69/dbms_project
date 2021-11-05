@@ -40,8 +40,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
   _navigatetohome() async {
     await Future.delayed(Duration(milliseconds: 1500), () {});
-    Navigator.of(context)
-        .pushNamed(isloggedIn == false ? '/loginPage' : '/homeScreen');
+    Navigator.of(context).pushNamedAndRemoveUntil(
+        isloggedIn == false ? '/loginPage' : '/chatScreen',
+        (Route<dynamic> route) => false);
   }
 
   @override
