@@ -1,5 +1,8 @@
 import 'package:app/SongScreen/ArtistSong.dart';
 import 'package:app/SongScreen/MusicPlayer.dart';
+import 'package:app/chats/chats_screen.dart';
+import 'package:app/chats/message.dart';
+import 'package:app/homeScreen/Favourite.dart';
 import 'package:app/homeScreen/HomeScreen.dart';
 import 'package:app/loginScreen/loginPage.dart';
 import 'package:app/loginScreen/register.dart';
@@ -45,6 +48,21 @@ class Routes {
         return MaterialPageRoute(
           builder: (_) => MusicPlayer(args),
         );
+      case '/fav':
+        return MaterialPageRoute(
+          builder: (_) => Fav(),
+        );
+
+      case '/chatScreen':
+        return MaterialPageRoute(
+          builder: (_) => ChatsScreen(),
+        );
+
+      case '/messageScreen':
+        return MaterialPageRoute(
+          builder: (_) => MessageScreen(),
+        );
+
       default:
         return _errorRoute();
     }
