@@ -3,12 +3,15 @@ import 'dart:convert';
 import 'package:app/LoginScreen/header.dart';
 import 'package:app/globalHelpers/global-helper.dart';
 import 'package:app/globalHelpers/theme.dart';
+import 'package:app/homeScreen/HomeScreen.dart';
+import 'package:date_field/date_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:simple_moment/simple_moment.dart';
 
 class RegistrationPage extends StatefulWidget {
   @override
@@ -30,16 +33,15 @@ class _RegistrationPageState extends State<RegistrationPage> {
   Future register() async {
     String link = 'http://localhost:5000/api/register';
     final body = {
-      "userInfo":{
+      "userInfo": {
         "email": userEmailId,
         "password": userPassword,
-        "dob":userdob,
-        "name":userName,
+        "dob": userdob,
+        "name": userName,
         "address": userAddress
-
       }
     };
-    final response = await GlobalHelper.checkAccessTokenForPost(link,body);
+    final response = await GlobalHelper.checkAccessTokenForPost(link, body);
     if (response.statusCode == 400) {
       var responseJson = json.decode(response.body);
       if (responseJson['msg'] == "Access token expired") {
@@ -60,7 +62,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
       var responseJson = json.decode(response.body);
       print(responseJson);
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString("accessToken",  responseJson["accessToken"]);
+      await prefs.setString("accessToken", responseJson["accessToken"]);
       await prefs.setString("refreshToken", responseJson["refreshToken"]);
       Fluttertoast.showToast(
           msg: responseJson['msg'],
@@ -71,6 +73,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           backgroundColor: Colors.red,
           textColor: Colors.white,
           fontSize: 16.0);
+      Navigator.of(context).pushNamed('/homeScreen');
     }
   }
 
@@ -100,16 +103,16 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         ),
                         Container(
                           child: TextFormField(
-                            onSaved: (val) => userName= val,
-                            decoration: ThemeHelper().textInputDecoration(
-                                'Name', 'Enter your name'),
+                            onSaved: (val) => userName = val,
+                            decoration: ThemeHelper()
+                                .textInputDecoration('Name', 'Enter your name'),
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
                         SizedBox(height: 20.0),
                         Container(
                           child: TextFormField(
-                            onSaved: (val) => userEmailId= val,
+                            onSaved: (val) => userEmailId = val,
                             decoration: ThemeHelper().textInputDecoration(
                                 "E-mail address", "Enter your email"),
                             keyboardType: TextInputType.emailAddress,
@@ -127,7 +130,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         SizedBox(height: 20.0),
                         Container(
                           child: TextFormField(
-                            onSaved: (val) => userAddress= val,
+                            onSaved: (val) => userAddress = val,
                             decoration: ThemeHelper().textInputDecoration(
                                 "Address", "Enter your Address"),
                             keyboardType: TextInputType.phone,
@@ -143,24 +146,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         SizedBox(height: 20.0),
                         Container(
                           child: TextFormField(
-                            onSaved: (val) => userdob= val,
-                            decoration: ThemeHelper().textInputDecoration(
-                                "Date of Birth", "Enter your Date of Birth"),
-                            keyboardType: TextInputType.phone,
-                            validator: (val) {
-                              if (!(val.isEmpty) &&
-                                  !RegExp(r"^(\d+)*$").hasMatch(val)) {
-                                return "Enter a valid Date of Birth";
-                              }
-                              return null;
-                            },
-                          ),
-                          decoration: ThemeHelper().inputBoxDecorationShaddow(),
-                        ),
-                        SizedBox(height: 20.0),
-                        Container(
-                          child: TextFormField(
-                            onSaved: (val) => userPassword= val,
+                            onSaved: (val) => userPassword = val,
                             obscureText: true,
                             decoration: ThemeHelper().textInputDecoration(
                                 "Password*", "Enter your password"),
@@ -172,6 +158,29 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             },
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
+                        ),
+                        SizedBox(height: 20.0),
+                        Container(
+                          padding: EdgeInsets.fromLTRB(18, 10, 18, 10),
+                          width: MediaQuery.of(context).size.width,
+                          child: DateTimeFormField(
+                            initialValue: DateTime.now(),
+                            decoration: const InputDecoration(
+                              hintStyle: TextStyle(color: Colors.black45),
+                              errorStyle: TextStyle(color: Colors.redAccent),
+                              border: InputBorder.none,
+                              suffixIcon: Icon(Icons.event_note),
+                              labelText: 'Date Of Birth',
+                            ),
+                            mode: DateTimeFieldPickerMode.date,
+                            autovalidateMode: AutovalidateMode.always,
+                            onDateSelected: (DateTime value) {
+                              setState(() {
+                                userdob = Moment.parse(value.toString())
+                                    .format('yyyy-MM-dd');
+                              });
+                            },
+                          ),
                         ),
                         SizedBox(height: 15.0),
                         FormField<bool>(
@@ -237,7 +246,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             onPressed: () async {
                               if (validate()) {
                                 Loader.show(context,
-                                    progressIndicator: CircularProgressIndicator(),
+                                    progressIndicator:
+                                        CircularProgressIndicator(),
                                     themeData: Theme.of(context)
                                         .copyWith(accentColor: Colors.black38),
                                     overlayColor: Color(0x99E8EAF6));
@@ -259,6 +269,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
       ),
     );
   }
+
   bool validate() {
     var valid = _formKey.currentState.validate();
     if (valid) _formKey.currentState.save();

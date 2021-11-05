@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:app/globalHelpers/global-helper.dart';
 import 'package:app/globalHelpers/theme.dart';
+import 'package:app/homeScreen/HomeScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,6 @@ import 'Register.dart';
 import 'header.dart';
 
 class LoginPage extends StatefulWidget {
-
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -26,12 +26,10 @@ class _LoginPageState extends State<LoginPage> {
   Future login() async {
     String link = 'http://localhost:5000/api/login';
     final body = {
-      "userInfo":{
-        "email": userEmailId,
-        "password": userPassword
-      }
+      "userInfo": {"email": userEmailId, "password": userPassword}
     };
-    final response = await GlobalHelper.checkAccessTokenForPost(link,body);
+    final response = await GlobalHelper.checkAccessTokenForPost(link, body);
+
     if (response.statusCode == 400) {
       var responseJson = json.decode(response.body);
       if (responseJson['msg'] == "Access token expired") {
@@ -52,7 +50,7 @@ class _LoginPageState extends State<LoginPage> {
       var responseJson = json.decode(response.body);
       print(responseJson);
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString("accessToken",  responseJson["accessToken"]);
+      await prefs.setString("accessToken", responseJson["accessToken"]);
       await prefs.setString("refreshToken", responseJson["refreshToken"]);
       Fluttertoast.showToast(
           msg: responseJson['msg'],
@@ -63,8 +61,11 @@ class _LoginPageState extends State<LoginPage> {
           backgroundColor: Colors.red,
           textColor: Colors.white,
           fontSize: 16.0);
+      Navigator.of(context).pushNamedAndRemoveUntil(
+          '/homeScreen', (Route<dynamic> route) => false);
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -100,16 +101,17 @@ class _LoginPageState extends State<LoginPage> {
                             children: [
                               Container(
                                 child: TextFormField(
-                                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                                  autovalidateMode:
+                                      AutovalidateMode.onUserInteraction,
                                   onSaved: (val) => userEmailId = val,
                                   validator: (val) {
                                     if (!(val.isEmpty) &&
-                                    !RegExp(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
-                                        .hasMatch(val)) {
-                                    return "Enter a valid email address";
+                                        !RegExp(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
+                                            .hasMatch(val)) {
+                                      return "Enter a valid email address";
                                     }
                                     return null;
-                                    },
+                                  },
                                   decoration: ThemeHelper().textInputDecoration(
                                       'Email', 'Enter your email'),
                                 ),
@@ -120,8 +122,9 @@ class _LoginPageState extends State<LoginPage> {
                               Container(
                                 child: TextFormField(
                                   obscureText: true,
-                                  onSaved: (val) => userPassword= val,
-                                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                                  onSaved: (val) => userPassword = val,
+                                  autovalidateMode:
+                                      AutovalidateMode.onUserInteraction,
                                   validator: (val) {
                                     if (val.isEmpty) {
                                       return "Please enter your password";
@@ -169,9 +172,10 @@ class _LoginPageState extends State<LoginPage> {
                                   onPressed: () async {
                                     if (validate()) {
                                       Loader.show(context,
-                                          progressIndicator: CircularProgressIndicator(),
-                                          themeData: Theme.of(context)
-                                              .copyWith(accentColor: Colors.black38),
+                                          progressIndicator:
+                                              CircularProgressIndicator(),
+                                          themeData: Theme.of(context).copyWith(
+                                              accentColor: Colors.black38),
                                           overlayColor: Color(0x99E8EAF6));
                                       await login();
                                       Loader.hide();
@@ -210,6 +214,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+
   bool validate() {
     var valid = _formKey.currentState.validate();
     if (valid) _formKey.currentState.save();
