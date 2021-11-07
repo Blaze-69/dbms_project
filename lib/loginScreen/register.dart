@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:app/LoginScreen/header.dart';
 import 'package:app/globalHelpers/global-helper.dart';
+import 'package:app/globalHelpers/routes.dart';
 import 'package:app/globalHelpers/theme.dart';
 import 'package:app/homeScreen/HomeScreen.dart';
 import 'package:date_field/date_field.dart';
@@ -12,6 +13,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_moment/simple_moment.dart';
+import 'package:velocity_x/src/extensions/context_ext.dart';
 
 class RegistrationPage extends StatefulWidget {
   @override
@@ -73,7 +75,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           backgroundColor: Colors.red,
           textColor: Colors.white,
           fontSize: 16.0);
-      Navigator.of(context).pushNamed('/homeScreen');
+      context.vxNav.push(Uri.parse(Routes.homeScreen));
     }
   }
 

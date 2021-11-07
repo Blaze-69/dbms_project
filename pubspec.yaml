@@ -35,6 +35,8 @@ dependencies:
   fluttertoast: ^8.0.8
   date_field: ^2.0.1
   shared_preferences: ^2.0.8
+  velocity_x: ^3.3.0
+  url_strategy: ^0.2.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

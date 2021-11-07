@@ -12,72 +12,14 @@ import 'package:app/profileSection/profileSection.dart';
 import 'package:flutter/material.dart';
 
 class Routes {
-  static Route<dynamic> generateRoute(RouteSettings settings) {
-    final args = settings.arguments;
-    switch (settings.name) {
-      case '/':
-        return MaterialPageRoute(
-          builder: (_) => SplashScreen(),
-        );
-      case '/loginPage':
-        return MaterialPageRoute(
-          builder: (_) => LoginPage(),
-        );
-      case '/register':
-        return MaterialPageRoute(
-          builder: (_) => RegistrationPage(),
-        );
-      case '/homeScreen':
-        return MaterialPageRoute(
-          builder: (_) => HomeScreen(),
-        );
-      case '/artistSongList':
-        return MaterialPageRoute(
-          builder: (_) => ArtistSongList(args),
-        );
-      case '/profile':
-        return MaterialPageRoute(
-          builder: (_) => Profile(),
-        );
-      case '/changePassword':
-        return MaterialPageRoute(
-          builder: (_) => ChangePassword(),
-        );
-
-      case '/musicPlayer':
-        return MaterialPageRoute(
-          builder: (_) => MusicPlayer(args),
-        );
-      case '/fav':
-        return MaterialPageRoute(
-          builder: (_) => Fav(),
-        );
-
-      case '/chatScreen':
-        return MaterialPageRoute(
-          builder: (_) => ChatsScreen(),
-        );
-
-      case '/messageScreen':
-        return MaterialPageRoute(
-          builder: (_) => MessageScreen(),
-        );
-
-      default:
-        return _errorRoute();
-    }
-  }
-}
-
-Route<dynamic> _errorRoute() {
-  return MaterialPageRoute(builder: (_) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("ERROR"),
-      ),
-      body: Center(
-        child: Text("ERROR"),
-      ),
-    );
-  });
+  static String loginPage = "/login";
+  static String register = "/register";
+  static String homeScreen = "/homeScreen";
+  static String artistSongList = '/artistSongList';
+  static String profile = '/profile';
+  static String changePassword = '/changePassword';
+  static String musicPlayer = '/musicPlayer';
+  static String fav = '/favourite';
+  static String chatScreen = '/chatScreen';
+  static String messageScreen = '/messageScreen';
 }

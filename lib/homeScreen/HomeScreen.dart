@@ -2,10 +2,12 @@ import 'dart:convert';
 
 import 'package:app/HomeScreen/models/PlayList.dart';
 import 'package:app/globalHelpers/global-helper.dart';
+import 'package:app/globalHelpers/routes.dart';
 import 'package:app/models/songModel.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:velocity_x/src/extensions/context_ext.dart';
 
 const kPrimaryColor = Color(0xff0968B0);
 const kSecondaryColor = Color(0xff7ec8e3);
@@ -134,7 +136,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildCurrentPlayingSong(Size size) {
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(context, '/song');
+        context.vxNav.push(Uri.parse(Routes.musicPlayer));
+        ;
       },
       child: Container(
         height: size.height * 0.100,
