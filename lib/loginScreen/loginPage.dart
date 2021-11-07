@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:app/globalHelpers/global-helper.dart';
+import 'package:app/globalHelpers/routes.dart';
 import 'package:app/globalHelpers/theme.dart';
 import 'package:app/homeScreen/HomeScreen.dart';
 import 'package:flutter/cupertino.dart';
@@ -10,6 +11,7 @@ import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:velocity_x/src/extensions/context_ext.dart';
 import 'Register.dart';
 import 'header.dart';
 
@@ -61,8 +63,7 @@ class _LoginPageState extends State<LoginPage> {
           backgroundColor: Colors.red,
           textColor: Colors.white,
           fontSize: 16.0);
-      Navigator.of(context).pushNamedAndRemoveUntil(
-          '/homeScreen', (Route<dynamic> route) => false);
+      context.vxNav.push(Uri.parse(Routes.homeScreen));
     }
   }
 

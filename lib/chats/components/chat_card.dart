@@ -80,5 +80,3 @@ class ChatCard extends StatelessWidget {
     );
   }
 }
-
-class required {}

@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'package:app/globalHelpers/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:velocity_x/src/extensions/context_ext.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -40,9 +42,11 @@ class _SplashScreenState extends State<SplashScreen> {
 
   _navigatetohome() async {
     await Future.delayed(Duration(milliseconds: 1500), () {});
-    Navigator.of(context).pushNamedAndRemoveUntil(
-        isloggedIn == false ? '/loginPage' : '/chatScreen',
-        (Route<dynamic> route) => false);
+    // Navigator.of(context).pushNamedAndRemoveUntil(
+    //     isloggedIn == false ? '/loginPage' : '/chatScreen',
+    //     (Route<dynamic> route) => false);
+    context.vxNav.push(
+        Uri.parse(isloggedIn == false ? Routes.loginPage : Routes.homeScreen));
   }
 
   @override
@@ -50,7 +54,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return Container(
       decoration: new BoxDecoration(
         gradient: new LinearGradient(
-          colors: [Theme.of(context).primaryColor],
+          colors: [Colors.green],
           begin: const FractionalOffset(0, 0),
           end: const FractionalOffset(1.0, 0.0),
           stops: [0.0, 1.0],
