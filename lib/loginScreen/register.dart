@@ -44,6 +44,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
       }
     };
     final response = await GlobalHelper.checkAccessTokenForPost(link, body);
+    print(response.body);
     if (response.statusCode == 400) {
       var responseJson = json.decode(response.body);
       if (responseJson['msg'] == "Access token expired") {
@@ -62,7 +63,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
       }
     } else {
       var responseJson = json.decode(response.body);
-      print(responseJson);
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString("accessToken", responseJson["accessToken"]);
       await prefs.setString("refreshToken", responseJson["refreshToken"]);
@@ -75,6 +75,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           backgroundColor: Colors.red,
           textColor: Colors.white,
           fontSize: 16.0);
+      context.vxNav.popToRoot();
       context.vxNav.push(Uri.parse(Routes.homeScreen));
     }
   }

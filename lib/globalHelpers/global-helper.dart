@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:app/models/userModel.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
@@ -7,12 +8,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class GlobalHelper {
   static final shared = GlobalHelper();
+
   static Future refresh() async {
     String url = 'http://localhost:5000/api/refresh';
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final refreshToken = await prefs.getString('refreshToken');
     print("refreshtoken $refreshToken");
-    final body = json.encode({"refreshToken": refreshToken});
+    final body = json.encode({"token": refreshToken});
     final response = await http.post(Uri.parse(url),
         headers: {
           "Content-Type": "application/json",
@@ -66,31 +68,34 @@ class GlobalHelper {
     return response;
   }
 
-  // static Future<User> fetchCurrentUser() async {
-  //   String link = 'https://anand64-backend.herokuapp.com/api/userInfo';
-  //   http.Response response = await checkAccessTokenForGet(link);
-  //   if (response.statusCode == 400){
-  //     var responseJson = json.decode(response.body);
-  //     if (responseJson['msg'] == "Access token expired") {
-  //       await refresh();
-  //       return fetchCurrentUser();
-  //     }
-  //     else{
-  //       Fluttertoast.showToast(
-  //           msg: responseJson['msg'],
-  //           toastLength: Toast.LENGTH_SHORT,
-  //           gravity: ToastGravity.CENTER,
-  //           timeInSecForIosWeb: 1,
-  //           backgroundColor: Colors.red,
-  //           textColor: Colors.white,
-  //           fontSize: 16.0);
-  //     }
-  //
-  //   }
-  //   else{
-  //      User user = userFromJson(response.body);
-  //      return user;
-  //   }
-  //
-  // }
+  static Future<User> fetchCurrentUser() async {
+    String link = 'http://localhost:5000/api/user';
+    http.Response response = await checkAccessTokenForGet(link);
+    print(response.body);
+    if (response.statusCode == 400){
+      var responseJson = json.decode(response.body);
+      if (responseJson['msg'] == "Access token expired") {
+        await refresh();
+        return fetchCurrentUser();
+      }
+      else{
+        Fluttertoast.showToast(
+            msg: responseJson['msg'],
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.CENTER,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+            fontSize: 16.0);
+      }
+
+    }
+    else{
+        print(response.body);
+        var responseJson = json.decode(response.body);
+       User user = userFromJson(json.encode(responseJson['user']));
+       return user;
+    }
+
+  }
 }

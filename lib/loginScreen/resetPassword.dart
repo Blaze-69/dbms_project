@@ -15,20 +15,19 @@ import 'package:velocity_x/src/extensions/context_ext.dart';
 import 'Register.dart';
 import 'header.dart';
 
-class LoginPage extends StatefulWidget {
+class ResetPasswordPage extends StatefulWidget {
   @override
-  _LoginPageState createState() => _LoginPageState();
+  _ResetPasswordPageState createState() => _ResetPasswordPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
-  String userPassword;
+class _ResetPasswordPageState extends State<ResetPasswordPage> {
   String userEmailId;
   double _headerHeight = 250;
   final _formKey = GlobalKey<FormState>();
-  Future login() async {
-    String link = 'http://localhost:5000/api/login';
+  Future ResetPassword() async {
+    String link = 'http://localhost:5000/api/requestResetPassword';
     final body = {
-      "userInfo": {"email": userEmailId, "password": userPassword}
+      "email": userEmailId
     };
     final response = await GlobalHelper.checkAccessTokenForPost(link, body);
 
@@ -36,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
       var responseJson = json.decode(response.body);
       if (responseJson['msg'] == "Access token expired") {
         await GlobalHelper.refresh();
-        login();
+        return ResetPassword();
       } else {
         Fluttertoast.showToast(
             msg: responseJson['msg'],
@@ -50,9 +49,6 @@ class _LoginPageState extends State<LoginPage> {
       }
     } else {
       var responseJson = json.decode(response.body);
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString("accessToken", responseJson["accessToken"]);
-      await prefs.setString("refreshToken", responseJson["refreshToken"]);
       Fluttertoast.showToast(
           msg: responseJson['msg'],
           toastLength: Toast.LENGTH_SHORT,
@@ -62,8 +58,6 @@ class _LoginPageState extends State<LoginPage> {
           backgroundColor: Colors.red,
           textColor: Colors.white,
           fontSize: 16.0);
-          context.vxNav.popToRoot();
-          context.vxNav.push(Uri.parse(Routes.homeScreen));
     }
   }
 
@@ -77,22 +71,22 @@ class _LoginPageState extends State<LoginPage> {
             Container(
               height: _headerHeight,
               child: HeaderWidget(_headerHeight, true,
-                  Icons.login_rounded), //let's create a common header widget
+                  Icons.done), //let's create a common header widget
             ),
             SafeArea(
               child: Container(
                   padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
                   margin: EdgeInsets.fromLTRB(
-                      20, 10, 20, 10), // This will be the login form
+                      20, 10, 20, 10), // This will be the ResetPassword form
                   child: Column(
                     children: [
                       Text(
-                        'Hello',
+                        'Reset',
                         style: TextStyle(
                             fontSize: 60, fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        'Signin into your account',
+                        'Enter Reset Email',
                         style: TextStyle(color: Colors.grey),
                       ),
                       SizedBox(height: 30.0),
@@ -103,7 +97,7 @@ class _LoginPageState extends State<LoginPage> {
                               Container(
                                 child: TextFormField(
                                   autovalidateMode:
-                                      AutovalidateMode.onUserInteraction,
+                                  AutovalidateMode.onUserInteraction,
                                   onSaved: (val) => userEmailId = val,
                                   validator: (val) {
                                     if (!(val.isEmpty) &&
@@ -117,53 +111,19 @@ class _LoginPageState extends State<LoginPage> {
                                       'Email', 'Enter your email'),
                                 ),
                                 decoration:
-                                    ThemeHelper().inputBoxDecorationShaddow(),
-                              ),
-                              SizedBox(height: 30.0),
-                              Container(
-                                child: TextFormField(
-                                  obscureText: true,
-                                  onSaved: (val) => userPassword = val,
-                                  autovalidateMode:
-                                      AutovalidateMode.onUserInteraction,
-                                  validator: (val) {
-                                    if (val.isEmpty) {
-                                      return "Please enter your password";
-                                    }
-                                    return null;
-                                  },
-                                  decoration: ThemeHelper().textInputDecoration(
-                                      'Password', 'Enter your password'),
-                                ),
-                                decoration:
-                                    ThemeHelper().inputBoxDecorationShaddow(),
+                                ThemeHelper().inputBoxDecorationShaddow(),
                               ),
                               SizedBox(height: 15.0),
                               Container(
-                                margin: EdgeInsets.fromLTRB(10, 0, 10, 20),
-                                alignment: Alignment.topRight,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    context.vxNav.push(Uri.parse(Routes.resetPassword));
-                                  },
-                                  child: Text(
-                                    "Forgot your password?",
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Container(
                                 decoration:
-                                    ThemeHelper().buttonBoxDecoration(context),
+                                ThemeHelper().buttonBoxDecoration(context),
                                 child: ElevatedButton(
                                   style: ThemeHelper().buttonStyle(),
                                   child: Padding(
                                     padding:
-                                        EdgeInsets.fromLTRB(40, 10, 40, 10),
+                                    EdgeInsets.fromLTRB(40, 10, 40, 10),
                                     child: Text(
-                                      'Sign In'.toUpperCase(),
+                                      'Reset'.toUpperCase(),
                                       style: TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold,
@@ -174,11 +134,11 @@ class _LoginPageState extends State<LoginPage> {
                                     if (validate()) {
                                       Loader.show(context,
                                           progressIndicator:
-                                              CircularProgressIndicator(),
+                                          CircularProgressIndicator(),
                                           themeData: Theme.of(context).copyWith(
                                               accentColor: Colors.black38),
                                           overlayColor: Color(0x99E8EAF6));
-                                      await login();
+                                      await ResetPassword();
                                       Loader.hide();
                                     }
                                   },
@@ -220,7 +180,6 @@ class _LoginPageState extends State<LoginPage> {
     var valid = _formKey.currentState.validate();
     if (valid) _formKey.currentState.save();
     print(userEmailId);
-    print(userPassword);
 
     return valid;
   }

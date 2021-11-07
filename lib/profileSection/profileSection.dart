@@ -1,8 +1,13 @@
+import 'package:app/globalHelpers/drawer.dart';
 import 'package:app/globalHelpers/global-helper.dart';
+import 'package:app/globalHelpers/musicScreenScaffold.dart';
+import 'package:app/globalHelpers/routes.dart';
+import 'package:app/models/userModel.dart';
 import 'package:app/profileSection/profileListItem.dart';
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:simple_moment/simple_moment.dart';
+import 'package:velocity_x/src/extensions/context_ext.dart';
 
 class Profile extends StatefulWidget {
   @override
@@ -13,51 +18,82 @@ class _ProfileState extends State<Profile> {
   String profileImageUri;
   String profileName;
 
-  Future refresh() async {}
-
   void initState() {
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: Text("Profile"),
-        ),
-        backgroundColor: Colors.black,
+    return MusicScreenScaffold(
         body: Container(
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
+          decoration: BoxDecoration(
+            color: Colors.black
+          ),
           child: Column(
             children: [
-              Container(
-                height: 100,
-                width: 100,
-                margin: EdgeInsets.only(top: 30),
-                child: Stack(
-                  children: [
-                    SizedBox(
-                      height: 30,
+              FutureBuilder(
+                future: GlobalHelper.fetchCurrentUser(),
+                builder: (context,snapshot){
+                  if(snapshot.connectionState == ConnectionState.done){
+                    if(snapshot.hasData){
+                      User user = snapshot.data;
+                      return Column(
+                        children: [
+                          Container(
+                            height: 100,
+                            width: 100,
+                            margin: EdgeInsets.only(top: 30),
+                            child: Stack(
+                              children: [
+                                SizedBox(
+                                  height: 30,
+                                ),
+                                CircleAvatar(
+                                    radius: 50,
+                                    backgroundColor: Colors.white,
+                                    foregroundImage: AssetImage("assets/G.jpg")),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 20),
+                          Text(
+                            user.name,
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          SizedBox(height: 5),
+                          Text(
+                          Moment.parse(user.dob
+                              .toString())
+                              .format('dd-MM-yyyy'),
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          SizedBox(height: 5),
+                          Text(
+                            user.email,
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          SizedBox(height: 5),
+                          Text(
+                            user.address,
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          SizedBox(height: 20),
+                        ],
+                      );
+                    }
+                  }
+                  return Container(
+                    height: 220,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.deepOrange,
+                      ),
                     ),
-                    CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.white,
-                        foregroundImage: AssetImage("assets/G.jpg")),
-                  ],
-                ),
+                  );
+                },
               ),
-              SizedBox(height: 20),
-              Text(
-                "Draco9421",
-                style: TextStyle(color: Colors.white),
-              ),
-              SizedBox(height: 5),
-              Text(
-                "qwerty@gmail.com",
-                style: TextStyle(color: Colors.white),
-              ),
-              SizedBox(height: 20),
               Expanded(
                   child: Column(children: [
                 SizedBox(
@@ -69,13 +105,15 @@ class _ProfileState extends State<Profile> {
                     ProfileListItems(
                       icon: Icons.edit,
                       text: 'Edit Profile',
-                      onPressed: () {},
+                      onPressed: () {
+                        context.vxNav.push(Uri.parse(Routes.editProfile));
+                      },
                     ),
                     ProfileListItems(
                       icon: Icons.password,
                       text: 'Change Password',
                       onPressed: () {
-                        Navigator.of(context).pushNamed('/changePassword');
+                        context.vxNav.push(Uri.parse(Routes.changePassword));
                       },
                     ),
                     ProfileListItems(
@@ -84,7 +122,13 @@ class _ProfileState extends State<Profile> {
                       onPressed: () {},
                     ),
                     ProfileListItems(
-                        icon: Icons.logout, text: 'Logout', onPressed: () {}),
+                        icon: Icons.logout, text: 'Logout', onPressed: () async {
+                      SharedPreferences prefs = await SharedPreferences.getInstance();
+                      await prefs.remove("accessToken");
+                      await prefs.remove("refreshToken");
+                      context.vxNav.popToRoot();
+                      context.vxNav.push(Uri.parse(Routes.loginPage));
+                    }),
                     SizedBox(
                       height: 40,
                     ),
