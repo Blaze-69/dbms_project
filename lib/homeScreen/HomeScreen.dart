@@ -1,6 +1,7 @@
 import 'dart:convert';
+import 'dart:ui';
 
-import 'package:app/HomeScreen/models/PlayList.dart';
+import 'package:app/HomeScreen/models/ArtistList.dart';
 import 'package:app/globalHelpers/global-helper.dart';
 import 'package:app/globalHelpers/musicScreenScaffold.dart';
 import 'package:app/globalHelpers/routes.dart';
@@ -23,20 +24,26 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<Song> parseList(String responseBody) {
+  List<Song> parseSongList(String responseBody) {
     final parsed =
         jsonDecode(responseBody)["songsList"].cast<Map<String, dynamic>>();
     return parsed.map<Song>((json) => Song.fromJson(json)).toList();
   }
 
+  List<Artist> parseArtistList(String responseBody) {
+    final parsed =
+    jsonDecode(responseBody)["artistsList"].cast<Map<String, dynamic>>();
+    return parsed.map<Artist>((json) => Artist.fromJson(json)).toList();
+  }
+
   Future _fetchSongs() async {
-    String link = 'http://localhost:5000/api/allSongs';
+    String link = 'http://localhost:5000/api/songs/allSongs';
     final response = await GlobalHelper.checkAccessTokenForGet(link);
     if (response.statusCode == 400) {
       var responseJson = json.decode(response.body);
       if (responseJson['msg'] == "Access token expired") {
         await GlobalHelper.refresh();
-        _fetchSongs();
+        return _fetchSongs();
       } else {
         Fluttertoast.showToast(
             msg: responseJson['msg'],
@@ -49,7 +56,33 @@ class _HomeScreenState extends State<HomeScreen> {
             fontSize: 16.0);
       }
     } else {
-      var list = parseList(response.body);
+      var list = parseSongList(response.body);
+      return list;
+    }
+  }
+  Future _fetchArtists() async {
+    String link = 'http://localhost:5000/api/artists/allArtists';
+    final response = await GlobalHelper.checkAccessTokenForGet(link);
+    print(response.body);
+    if (response.statusCode == 400) {
+      var responseJson = json.decode(response.body);
+      if (responseJson['msg'] == "Access token expired") {
+        await GlobalHelper.refresh();
+        return _fetchArtists();
+      } else {
+        Fluttertoast.showToast(
+            msg: responseJson['msg'],
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 2,
+            backgroundColor: Colors.red,
+            webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
+            textColor: Colors.white,
+            fontSize: 16.0);
+      }
+    } else {
+
+      var list = parseArtistList(response.body);
       return list;
     }
   }
@@ -75,35 +108,59 @@ class _HomeScreenState extends State<HomeScreen> {
           height: 0.35 * size.height,
           width: MediaQuery.of(context).size.width,
           // color: Colors.purple,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: playlists.length,
-            itemBuilder: (context, index) => _buildPlaylistItem(
-                image: playlists[index].image,
-                artist: playlists[index].playlistName),
-          ),
-        ),
-        Container(
-          height: 0.35 * size.height,
-          width: MediaQuery.of(context).size.width,
-          child: FutureBuilder(
-            future: _fetchSongs(),
+          child:
+          FutureBuilder(
+            future: _fetchArtists(),
             builder: (context, AsyncSnapshot snapshot) {
               if (snapshot.connectionState == ConnectionState.done) {
-                List<Song> items = snapshot.data;
                 if (snapshot.hasData) {
-                  return ListView.builder(
+                  List<Artist> items = snapshot.data;
+                  return ScrollConfiguration(
+                    behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {
+                      PointerDeviceKind.touch,
+                      PointerDeviceKind.mouse,
+                    },),
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
                       itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        return _buildSonglistItem(items[index]);
-                      });
+                      itemBuilder: (context, index) => _buildPlaylistItem(
+                          image: artistList[index].image,
+                          artist: items[index]),
+                    ),
+                  );
                 }
               }
               return Center(
                 child: CircularProgressIndicator(),
               );
             },
-          ),
+          )
+        ),
+        FutureBuilder(
+          future: _fetchSongs(),
+          builder: (context, AsyncSnapshot snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasData) {
+                List<Song> items = snapshot.data;
+                return Expanded(
+                  child: ScrollConfiguration(
+                    behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {
+                      PointerDeviceKind.touch,
+                      PointerDeviceKind.mouse,
+                    },),
+                    child: ListView.builder(
+                        itemCount: items.length,
+                        itemBuilder: (context, index) {
+                          return _buildSonglistItem(items[index]);
+                        }),
+                  ),
+                );
+              }
+            }
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          },
         )
       ],
     );
@@ -112,8 +169,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildCurrentPlayingSong(Size size) {
     return GestureDetector(
       onTap: () {
-        context.vxNav.push(Uri.parse(Routes.musicPlayer));
-        ;
+        context.vxNav.push(
+          Uri(
+              path:Routes.musicPlayer,
+              queryParameters: {"id": "1"}
+          ),
+        );
       },
       child: Container(
         height: size.height * 0.100,
@@ -172,11 +233,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildPlaylistItem({String artist, String image}) {
+  Widget _buildPlaylistItem({ Artist artist, String image}) {
     return InkWell(
       onTap: () {
-        Navigator.of(context).pushNamed('/artistSongList',
-            arguments: {'artist': artist, 'image': image});
+        context.vxNav.push(
+            Uri(path:Routes.artistSongList,queryParameters: {"id":artist.artist_id.toString()}),
+        );
       },
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
@@ -192,7 +254,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Text(
-                  artist,
+                  artist.name,
                   style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -222,8 +284,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSonglistItem(Song selectedSong) {
     return InkWell(
       onTap: () {
-        Navigator.of(context)
-            .pushNamed('/musicPlayer', arguments: selectedSong);
+        context.vxNav.push(
+            Uri(
+            path:Routes.musicPlayer,
+            queryParameters: {"id": selectedSong.songId.toString()}
+            ),
+        );
       },
       child: ListTile(
         title: Text(selectedSong.title),
