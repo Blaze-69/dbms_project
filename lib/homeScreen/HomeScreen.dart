@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:app/HomeScreen/models/PlayList.dart';
 import 'package:app/globalHelpers/global-helper.dart';
+import 'package:app/globalHelpers/musicScreenScaffold.dart';
 import 'package:app/globalHelpers/routes.dart';
 import 'package:app/models/songModel.dart';
 import 'package:flutter/material.dart';
@@ -56,37 +57,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    return Scaffold(
-      backgroundColor: kWhiteColor,
-      appBar: AppBar(
-        title: Text(
-          'Discover',
-          style: TextStyle(color: Colors.black),
-        ),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: InkWell(
-              onTap: () {
-                Navigator.of(context).pushNamed('/profile');
-              },
-              child: Icon(
-                Icons.account_circle,
-                color: kPrimaryColor,
-                size: 30,
-              ),
-            ),
-          )
-        ],
-      ),
-      body: Column(
+    return MusicScreenScaffold(
+      body: Stack(
+        alignment: AlignmentDirectional.bottomCenter,
         children: [
-          Container(
-              height: size.height * 0.72, child: _buildPlaylistAndSongs(size)),
+          _buildPlaylistAndSongs(size),
           _buildCurrentPlayingSong(size),
-          _buildBottomBar(size)
         ],
       ),
     );
@@ -189,42 +165,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 Icons.pause,
                 color: kPrimaryColor,
               ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomBar(Size size) {
-    return Container(
-      height: size.height * 0.065,
-      color: kSecondaryColor,
-      child: Container(
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(50),
-              topRight: Radius.circular(50),
-            ),
-            color: kWhiteColor),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Icon(
-              Icons.home,
-              color: kLightColor,
-            ),
-            Icon(
-              Icons.search,
-              color: kLightColor,
-            ),
-            Icon(
-              Icons.playlist_play,
-              color: kLightColor,
-            ),
-            Icon(
-              Icons.favorite_border,
-              color: kLightColor,
             )
           ],
         ),
