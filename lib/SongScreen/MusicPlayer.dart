@@ -5,6 +5,7 @@ import 'package:app/globalHelpers/global-helper.dart';
 import 'package:app/globalHelpers/musicScreenScaffold.dart';
 import 'package:app/models/songModel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class MusicPlayer extends StatefulWidget {
@@ -44,17 +45,107 @@ class _MusicPlayerState extends State<MusicPlayer> {
       return song;
     }
   }
+  Future _checkIsFavourite() async {
+    String link = 'http://localhost:5000/api/songs/isFav/${widget.song_id}';
+    final response = await GlobalHelper.checkAccessTokenForGet(link);
+    if (response.statusCode == 400) {
+      var responseJson = json.decode(response.body);
+      if (responseJson['msg'] == "Access token expired") {
+        await GlobalHelper.refresh();
+        return _fetchSong();
+      } else {
+        Fluttertoast.showToast(
+            msg: responseJson['msg'],
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 2,
+            backgroundColor: Colors.red,
+            webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
+            textColor: Colors.white,
+            fontSize: 16.0);
+      }
+    } else {
+      var responseJson = json.decode(response.body);
+      return responseJson["isFav"];
+    }
+  }
+  Future addToFav() async {
+    String link = 'http://localhost:5000/api/songs/addToFav';
+    final body = {
+      "song_id": widget.song_id
+    };
+    final response = await GlobalHelper.checkAccessTokenForPost(link, body);
+
+    if (response.statusCode == 400) {
+      var responseJson = json.decode(response.body);
+      if (responseJson['msg'] == "Access token expired") {
+        await GlobalHelper.refresh();
+        return addToFav();
+      } else {
+        Fluttertoast.showToast(
+            msg: responseJson['msg'],
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 2,
+            backgroundColor: Colors.red,
+            webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
+            textColor: Colors.white,
+            fontSize: 16.0);
+      }
+    } else {
+      var responseJson = json.decode(response.body);
+      Fluttertoast.showToast(
+          msg: responseJson['msg'],
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 2,
+          webBgColor: "linear-gradient(to right, #32CD32  , #32CD32)",
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0);
+    }
+  }
+  Future removeFromFav() async {
+    String link = 'http://localhost:5000/api/songs/removeFromFav';
+    final body = {
+      "song_id": widget.song_id
+    };
+    final response = await GlobalHelper.checkAccessTokenForDelete(link, body);
+
+    if (response.statusCode == 400) {
+      var responseJson = json.decode(response.body);
+      if (responseJson['msg'] == "Access token expired") {
+        await GlobalHelper.refresh();
+        return addToFav();
+      } else {
+        Fluttertoast.showToast(
+            msg: responseJson['msg'],
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 2,
+            backgroundColor: Colors.red,
+            webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
+            textColor: Colors.white,
+            fontSize: 16.0);
+      }
+    } else {
+      var responseJson = json.decode(response.body);
+      Fluttertoast.showToast(
+          msg: responseJson['msg'],
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 2,
+          webBgColor: "linear-gradient(to right, #32CD32  , #32CD32)",
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return MusicScreenScaffold(
-      body: FutureBuilder(
-        future: _fetchSong(),
-        builder: (context,snapshot){
-          if(snapshot.connectionState == ConnectionState.done){
-            if(snapshot.hasData){
-              Song song = snapshot.data;
-              return Stack(
+      body: Stack(
                 children: [
                   Hero(
                     tag: "image",
@@ -93,32 +184,93 @@ class _MusicPlayerState extends State<MusicPlayer> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Padding(
-                                    padding:
-                                    EdgeInsets.only(left: 20, right: 20, top: 20),
+                                    padding: EdgeInsets.only(left: 20, right: 20, top: 20),
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment: CrossAxisAlignment.center,
                                       children: [
-                                        Text(
-                                          song.title,
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 30,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        Icon(
-                                          Icons.favorite,
-                                          color: Colors.white,
-                                          size: 40,
+                                        FutureBuilder(
+                                        future: _fetchSong(),
+                                        builder: (context,snapshot){
+                                          if(snapshot.connectionState == ConnectionState.done){
+                                            if(snapshot.hasData){
+                                              Song song = snapshot.data;
+                                              return Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                               children: [
+                                                Text(
+                                                  song.title,
+                                                  style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 30,
+                                                      fontWeight: FontWeight.bold),
+                                                ),
+                                                 Text(
+                                                   song.artist,
+                                                   style: TextStyle(color: Colors.white),
+                                                 ),
+                                               ],
+                                              );
+                                            }
+                                          }
+                                          return Center(
+                                            child: CircularProgressIndicator(
+                                            color: Colors.deepOrange,
+                                            ),
+                                          );
+                                        }
+                                          ),
+                                        Container(
+                                          width: 40,
+                                          height: 40,
+                                          child: FutureBuilder(
+                                              future: _checkIsFavourite(),
+                                              builder: (context,snapshot){
+                                                if(snapshot.connectionState == ConnectionState.done){
+                                                  if(snapshot.hasData){
+                                                    bool isFav = snapshot.data;
+                                                    if(isFav == true){
+                                                      return InkWell(
+                                                        onTap: () async {
+                                                          snapshot.inState(ConnectionState.waiting);
+                                                          await removeFromFav();
+                                                          setState(() {
+                                                            isFav = false;
+                                                          });
+                                                        },
+                                                        child: Icon(
+                                                          Icons.favorite,
+                                                          color: Colors.red,
+                                                          size: 40,
+                                                        ),
+                                                      );
+                                                    }
+                                                    else{
+                                                      return InkWell(
+                                                        onTap: () async {
+                                                          snapshot.inState(ConnectionState.waiting);
+                                                          await addToFav();
+                                                          setState(() {
+                                                            isFav = false;
+                                                          });
+                                                        },
+                                                        child: Icon(
+                                                          Icons.favorite,
+                                                          color: Colors.white,
+                                                          size: 40,
+                                                        ),
+                                                      );
+                                                    }
+                                                  }
+                                                }
+                                                return Center(
+                                                  child: CircularProgressIndicator(
+                                                    color: Colors.deepOrange,
+                                                  ),
+                                                );
+                                              }
+                                          ),
                                         )
                                       ],
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.only(left: 20),
-                                    child: Text(
-                                      song.artist,
-                                      style: TextStyle(color: Colors.white),
                                     ),
                                   ),
                                   Container(
@@ -196,16 +348,7 @@ class _MusicPlayerState extends State<MusicPlayer> {
                       ),
                     ),
                 ],
-              );
-            }
-          }
-          return Center(
-            child: CircularProgressIndicator(
-              color: Colors.deepOrange,
-            ),
-          );
-        },
-      )
+              )
     );
   }
 }

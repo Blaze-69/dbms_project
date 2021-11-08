@@ -68,6 +68,17 @@ class GlobalHelper {
     return response;
   }
 
+  static Future checkAccessTokenForDelete(link,body) async {
+    String url = link;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final accessToken = await prefs.getString("accessToken");
+    final response = await http.delete(Uri.parse(url), headers: {
+      "Authorization": "Bearer $accessToken",
+      "Content-Type": "application/json",
+    },body: json.encode(body));
+    return response;
+  }
+
   static Future<User> fetchCurrentUser() async {
     String link = 'http://localhost:5000/api/user';
     http.Response response = await checkAccessTokenForGet(link);

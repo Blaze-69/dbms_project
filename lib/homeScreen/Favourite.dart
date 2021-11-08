@@ -3,10 +3,12 @@ import 'dart:convert';
 import 'package:app/HomeScreen/models/ArtistList.dart';
 import 'package:app/globalHelpers/global-helper.dart';
 import 'package:app/globalHelpers/musicScreenScaffold.dart';
+import 'package:app/globalHelpers/routes.dart';
 import 'package:app/models/songModel.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:velocity_x/src/extensions/context_ext.dart';
 
 const kPrimaryColor = Color(0xff0968B0);
 const kSecondaryColor = Color(0xff7ec8e3);
@@ -28,13 +30,15 @@ class _FavState extends State<Fav> {
   }
 
   Future _fetchSongs() async {
-    String link = 'http://localhost:5000/api/allSongs';
+    String link = 'http://localhost:5000/api/songs/allFavSongs';
     final response = await GlobalHelper.checkAccessTokenForGet(link);
+
+    print(response.body);
     if (response.statusCode == 400) {
       var responseJson = json.decode(response.body);
       if (responseJson['msg'] == "Access token expired") {
         await GlobalHelper.refresh();
-        _fetchSongs();
+        return _fetchSongs();
       } else {
         Fluttertoast.showToast(
             msg: responseJson['msg'],
@@ -56,12 +60,11 @@ class _FavState extends State<Fav> {
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return MusicScreenScaffold(
-      body: Column(
+      body: Stack(
+        alignment: AlignmentDirectional.bottomCenter,
         children: [
-          Container(
-              height: size.height * 0.72, child: _buildPlaylistAndSongs(size)),
+          _buildPlaylistAndSongs(size),
           _buildCurrentPlayingSong(size),
-          _buildBottomBar(size)
         ],
       ),
     );
@@ -99,7 +102,12 @@ class _FavState extends State<Fav> {
   Widget _buildCurrentPlayingSong(Size size) {
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(context, '/song');
+        context.vxNav.push(
+          Uri(
+              path:Routes.musicPlayer,
+              queryParameters: {"id": "1"}
+          ),
+        );
       },
       child: Container(
         height: size.height * 0.100,
@@ -157,95 +165,15 @@ class _FavState extends State<Fav> {
       ),
     );
   }
-
-  Widget _buildBottomBar(Size size) {
-    return Container(
-      height: size.height * 0.065,
-      color: kSecondaryColor,
-      child: Container(
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(50),
-              topRight: Radius.circular(50),
-            ),
-            color: kWhiteColor),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Icon(
-              Icons.home,
-              color: kLightColor,
-            ),
-            Icon(
-              Icons.search,
-              color: kLightColor,
-            ),
-            Icon(
-              Icons.playlist_play,
-              color: kLightColor,
-            ),
-            Icon(
-              Icons.favorite_border,
-              color: kLightColor,
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPlaylistItem({String artist, String image}) {
-    return InkWell(
-      onTap: () {
-        Navigator.of(context).pushNamed('/artistSongList',
-            arguments: {'artist': artist, 'image': image});
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
-        width: 250,
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20.0),
-            color: Colors.orange,
-            image: DecorationImage(image: AssetImage(image), fit: BoxFit.fill)),
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Text(
-                  artist,
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20),
-                ),
-              ),
-              Expanded(child: Container(height: 0)),
-              Container(
-                height: 30,
-                width: 30,
-                margin: EdgeInsets.all(10.0),
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10.0),
-                    color: Colors.white),
-                child: Icon(
-                  Icons.play_circle_outline,
-                  color: kPrimaryColor,
-                ),
-              )
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildSonglistItem(Song selectedSong) {
     return InkWell(
       onTap: () {
-        Navigator.of(context)
-            .pushNamed('/musicPlayer', arguments: selectedSong);
+        context.vxNav.push(
+          Uri(
+              path:Routes.musicPlayer,
+              queryParameters: {"id": selectedSong.songId.toString()}
+          ),
+        );
       },
       child: ListTile(
         title: Text(selectedSong.title),
