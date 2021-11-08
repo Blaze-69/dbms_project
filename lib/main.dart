@@ -27,11 +27,25 @@ class MyApp extends StatelessWidget {
   Routes.loginPage: (_, __) => MaterialPage(child: LoginPage()),
   Routes.homeScreen: (_, __) => MaterialPage(child: HomeScreen()),
   Routes.register: (_, __) => MaterialPage(child: RegistrationPage()),
-  // Routes.artistSongList: (_, __) => MaterialPage(child: ArtistSongList()),
+  Routes.artistSongList: (uri, __) {
+    final artist_id = uri.queryParameters["id"];
+     return MaterialPage(
+         child: ArtistSongList(
+           artist_id: artist_id
+         )
+     );
+  },
   Routes.profile: (_, __) => MaterialPage(child: Profile()),
   Routes.changePassword: (_, __) => MaterialPage(child: ChangePassword()),
-  // Routes.musicPlayer: (_, __) => MaterialPage(child: MusicPlayer()),
   Routes.fav: (_, __) => MaterialPage(child: Fav()),
+  Routes.musicPlayer: (uri,_) {
+    final song_id = uri.queryParameters["id"];
+    return MaterialPage(
+      child: MusicPlayer(
+      song_id: song_id ,
+      ),
+    );
+  },
   Routes.chatScreen: (_, __) => MaterialPage(child: ChatsScreen()),
   Routes.messageScreen: (_, __) => MaterialPage(child: MessageScreen()),
   Routes.editProfile: (_, __) => MaterialPage(child: EditProfile()),

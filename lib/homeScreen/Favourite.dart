@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:app/HomeScreen/models/PlayList.dart';
+import 'package:app/HomeScreen/models/ArtistList.dart';
 import 'package:app/globalHelpers/global-helper.dart';
 import 'package:app/globalHelpers/musicScreenScaffold.dart';
 import 'package:app/models/songModel.dart';
