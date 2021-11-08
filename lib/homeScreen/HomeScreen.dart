@@ -58,12 +58,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return MusicScreenScaffold(
-      body: Column(
+      body: Stack(
+        alignment: AlignmentDirectional.bottomCenter,
         children: [
-          Container(
-              height: size.height * 0.72, child: _buildPlaylistAndSongs(size)),
+          _buildPlaylistAndSongs(size),
           _buildCurrentPlayingSong(size),
-          _buildBottomBar(size)
         ],
       ),
     );
@@ -166,42 +165,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 Icons.pause,
                 color: kPrimaryColor,
               ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomBar(Size size) {
-    return Container(
-      height: size.height * 0.065,
-      color: kSecondaryColor,
-      child: Container(
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(50),
-              topRight: Radius.circular(50),
-            ),
-            color: kWhiteColor),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Icon(
-              Icons.home,
-              color: kLightColor,
-            ),
-            Icon(
-              Icons.search,
-              color: kLightColor,
-            ),
-            Icon(
-              Icons.playlist_play,
-              color: kLightColor,
-            ),
-            Icon(
-              Icons.favorite_border,
-              color: kLightColor,
             )
           ],
         ),

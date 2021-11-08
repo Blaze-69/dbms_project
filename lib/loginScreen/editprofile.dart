@@ -27,7 +27,7 @@ class _EditProfileState extends State<EditProfile> {
   final _formKey = GlobalKey<FormState>();
 
   Future updateProfile() async {
-    String link = 'http://localhost:5000/api/user/updateAccount';
+    String link = 'http://localhost:5000/api/user';
     final body = {
       "userInfo":{
         "name": userName,
@@ -35,7 +35,6 @@ class _EditProfileState extends State<EditProfile> {
         "dob":userDob
       }
     };
-    print(body);
     http.Response response =
         await GlobalHelper.checkAccessTokenForUpdate(link, body);
     print(response.body);
@@ -72,14 +71,6 @@ class _EditProfileState extends State<EditProfile> {
 
 
   String nameValidator(String name) {
-    if (name.isEmpty) {
-      return "Field Cannot Be Empty";
-    } else {
-      return null;
-    }
-  }
-
-  String aadharvalidator(String name) {
     if (name.isEmpty) {
       return "Field Cannot Be Empty";
     } else {
