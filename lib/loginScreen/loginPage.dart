@@ -36,7 +36,7 @@ class _LoginPageState extends State<LoginPage> {
       var responseJson = json.decode(response.body);
       if (responseJson['msg'] == "Access token expired") {
         await GlobalHelper.refresh();
-        login();
+        return login();
       } else {
         Fluttertoast.showToast(
             msg: responseJson['msg'],
