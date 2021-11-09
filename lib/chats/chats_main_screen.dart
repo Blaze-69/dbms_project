@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:app/chats/Screens/chatGroupScreen.dart';
 import 'package:app/chats/Screens/chatRequestScreen.dart';
+import 'package:app/globalHelpers/chatScreenScaffold.dart';
 import 'package:app/globalHelpers/global-helper.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -14,8 +15,9 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+
   Future _fetchfriends() async {
-    String link = 'http://localhost:5000/api/friends/getFriends';
+    String link = 'http://localhost:5000/api/friends';
     final response = await GlobalHelper.checkAccessTokenForGet(link);
 
     print(response.body);
@@ -47,41 +49,43 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: TabBar(
-          indicatorColor: Colors.green,
-          indicatorWeight: 3.0,
-          labelColor: Colors.green,
-          onTap: (index) {},
-          tabs: [
-            Tab(
-              child: Chip(
-                label: Text("Friends"),
-                backgroundColor: Colors.white,
+    return ChatScreenScaffold(
+      body: DefaultTabController(
+        length: 3,
+        child: Scaffold(
+          appBar: TabBar(
+            indicatorColor: Colors.green,
+            indicatorWeight: 3.0,
+            labelColor: Colors.green,
+            onTap: (index) {},
+            tabs: [
+              Tab(
+                child: Chip(
+                  label: Text("Friends"),
+                  backgroundColor: Colors.white,
+                ),
               ),
-            ),
-            Tab(
-              child: Chip(
-                label: Text("Artist Groups"),
-                backgroundColor: Colors.white,
+              Tab(
+                child: Chip(
+                  label: Text("Artist Groups"),
+                  backgroundColor: Colors.white,
+                ),
               ),
-            ),
-            Tab(
-              child: Chip(
-                label: Text("Request"),
-                backgroundColor: Colors.white,
+              Tab(
+                child: Chip(
+                  label: Text("Request"),
+                  backgroundColor: Colors.white,
+                ),
               ),
-            ),
-          ],
-        ),
-        body: TabBarView(
-          children: [
-            ChatScreen(),
-            GroupChatScreen(),
-            PendingRequest(),
-          ],
+            ],
+          ),
+          body: TabBarView(
+            children: [
+              ChatScreen(),
+              GroupChatScreen(),
+              PendingRequest(),
+            ],
+          ),
         ),
       ),
     );

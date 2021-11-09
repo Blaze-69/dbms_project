@@ -7,10 +7,17 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:velocity_x/src/extensions/context_ext.dart';
 
-class ChatScreenScaffold extends StatelessWidget {
+class ChatScreenScaffold extends StatefulWidget{
   final Widget body;
 
   const ChatScreenScaffold({this.body});
+
+  @override
+  _ChatScreenScaffoldState createState() => _ChatScreenScaffoldState();
+}
+
+class _ChatScreenScaffoldState extends State<ChatScreenScaffold> {
+  String type = 'user';
 
   @override
   Widget build(BuildContext context) {
@@ -61,36 +68,77 @@ class ChatScreenScaffold extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Container(
-                        child: Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(left:20,right:120.0),
-                            child: TextField(
-                                decoration: InputDecoration(
-                                  hintText: 'Search User, Group',
-                                  prefixIcon:Padding(
-                                    padding: const EdgeInsets.only(left:8.0),
-                                    child: Icon(Icons.search_sharp,size:25,color:Colors.black54),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                      child: DropdownButton<String>(
+                        value: type,
+                        elevation: 1,
+                        style: TextStyle(
+                            color: Colors.black),
+                        iconEnabledColor:Colors.black,
+                        items: <String>[
+                          'user',
+                          'group'
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (String value) {
+                          setState(() {
+                            type = value;
+                          });
+                        },
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right:120.0),
+                        child: TextFormField(
+                            textInputAction: TextInputAction.go,
+                            onFieldSubmitted: (val){
+                              if(type == 'user'){
+                                context.vxNav.push(
+                                  Uri(
+                                      path:Routes.searchUser,
+                                      queryParameters: {"name": val}
                                   ),
-                                  hintStyle: TextStyle(color: Colors.grey),
-                                  filled: true,
-                                  fillColor: Colors.black12,
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(Radius.circular(25.0)),
-                                    borderSide: BorderSide(color: Colors.black12),
+                                );
+                              }
+                              else if(type == 'group'){
+                                context.vxNav.push(
+                                  Uri(
+                                      path:Routes.searchGroup,
+                                      queryParameters: {"name": val}
                                   ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(Radius.circular(25.0)),
-                                    borderSide: BorderSide(color: Colors.lightBlueAccent,width:4),
-                                  ),
-                                ),
-                                style: TextStyle(
-                                    color: Colors.black
-                                )
+                                );
+                              }
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'Search User, Group',
+                              prefixIcon:Padding(
+                                padding: const EdgeInsets.only(left:8.0),
+                                child: Icon(Icons.search_sharp,size:25,color:Colors.black54),
+                              ),
+                              hintStyle: TextStyle(color: Colors.grey),
+                              filled: true,
+                              fillColor: Colors.black12,
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(25.0)),
+                                borderSide: BorderSide(color: Colors.black12),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(25.0)),
+                                borderSide: BorderSide(color: Colors.lightBlueAccent,width:4),
+                              ),
                             ),
-                          ),
-                        )
-                    )
+                            style: TextStyle(
+                                color: Colors.black
+                            )
+                        ),
+                      ),
+                    ),
                   ],
                 )
             ),
@@ -116,7 +164,7 @@ class ChatScreenScaffold extends StatelessWidget {
           ],
         ),
       ),
-      body: body,
+      body: widget.body,
     );
   }
 

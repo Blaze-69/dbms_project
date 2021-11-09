@@ -1,7 +1,7 @@
 import 'package:app/SongScreen/ArtistSong.dart';
 import 'package:app/SongScreen/MusicPlayer.dart';
-import 'package:app/chats/chats_main_screen.dart';
-import 'package:app/chats/components/message.dart';
+import 'package:app/chats/searchGroup.dart';
+import 'package:app/chats/searchUser.dart';
 import 'package:app/globalHelpers/routes.dart';
 import 'package:app/homeScreen/Favourite.dart';
 import 'package:app/homeScreen/HomeScreen.dart';
@@ -15,6 +15,10 @@ import 'package:app/profileSection/profileSection.dart';
 import 'package:flutter/material.dart';
 import 'package:url_strategy/url_strategy.dart';
 import 'package:velocity_x/velocity_x.dart';
+
+import 'SongScreen/searchSong.dart';
+import 'chats/chats_main_screen.dart';
+import 'chats/components/message.dart';
 
 void main() {
   setPathUrlStrategy();
@@ -31,6 +35,30 @@ class MyApp extends StatelessWidget {
       final artist_id = uri.queryParameters["id"];
       return MaterialPage(child: ArtistSongList(artist_id: artist_id));
     },
+    Routes.searchSong: (uri, __) {
+      final title = uri.queryParameters["title"];
+      return MaterialPage(
+          child: SearchSong(
+              title: title
+          )
+      );
+    },
+    Routes.searchUser: (uri, __) {
+      final name = uri.queryParameters["name"];
+      return MaterialPage(
+          child: SearchUser(
+              name: name
+          )
+      );
+    },
+    Routes.searchGroup: (uri, __) {
+      final name = uri.queryParameters["name"];
+      return MaterialPage(
+          child: SearchGroup(
+              name: name
+          )
+      );
+    },
     Routes.profile: (_, __) => MaterialPage(child: Profile()),
     Routes.changePassword: (_, __) => MaterialPage(child: ChangePassword()),
     Routes.fav: (_, __) => MaterialPage(child: Fav()),
@@ -42,6 +70,7 @@ class MyApp extends StatelessWidget {
         ),
       );
     },
+
     Routes.chatScreen: (_, __) => MaterialPage(child: MainScreen()),
     Routes.messageScreen: (_, __) => MaterialPage(child: MessageScreen()),
     Routes.editProfile: (_, __) => MaterialPage(child: EditProfile()),
