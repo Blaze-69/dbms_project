@@ -21,7 +21,7 @@ class _CreateGroupState extends State<CreateGroup> {
   double _headerHeight = 250;
   final _formKey = GlobalKey<FormState>();
 
-  Future login() async {
+  Future _createGroup() async {
     String link = 'http://localhost:5000/api/groups/createGroup';
     final body = {"name": groupName, "artist": artistName};
     final response = await GlobalHelper.checkAccessTokenForPost(link, body);
@@ -30,7 +30,7 @@ class _CreateGroupState extends State<CreateGroup> {
       var responseJson = json.decode(response.body);
       if (responseJson['msg'] == "Access token expired") {
         await GlobalHelper.refresh();
-        return login();
+        return _createGroup();
       } else {
         Fluttertoast.showToast(
             msg: responseJson['msg'],
@@ -145,7 +145,7 @@ class _CreateGroupState extends State<CreateGroup> {
                                           themeData: Theme.of(context).copyWith(
                                               accentColor: Colors.black38),
                                           overlayColor: Color(0x99E8EAF6));
-                                      await login();
+                                      await _createGroup();
                                       Loader.hide();
                                     }
                                   },
