@@ -3,18 +3,21 @@ import 'package:app/globalHelpers/constants.dart';
 import 'package:app/globalHelpers/routes.dart';
 import 'package:app/models/userModel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:velocity_x/src/extensions/context_ext.dart';
 
 class ChatCard extends StatelessWidget {
   ChatCard({
     this.title,
     this.subtitle,
-    this.type
+    this.type,
+    this.function
   });
 
   String title;
   String subtitle;
   String type;
+  VoidCallback function;
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +84,7 @@ class ChatCard extends StatelessWidget {
                 children:[
                   Text("Unfriend"),
                   IconButton(
-                  onPressed: () {},
+                  onPressed: function,
                   icon: Icon(Icons.highlight_remove_outlined),
                   color: Colors.red,
                 )],
@@ -91,7 +94,7 @@ class ChatCard extends StatelessWidget {
                 children:[
                   Text("Leave"),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: function,
                     icon: Icon(Icons.exit_to_app),
                     color: Colors.red,
                   )],
