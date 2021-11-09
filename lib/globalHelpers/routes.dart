@@ -10,5 +10,8 @@ class Routes {
   static String chatScreen = '/chatScreen';
   static String messageScreen = '/messageScreen';
   static String editProfile = '/edit';
+  static String searchSong = '/search/song';
+  static String searchUser = '/search/user';
+  static String searchGroup = '/search/group';
   static String resetPassword = '/resetPassword';
 }

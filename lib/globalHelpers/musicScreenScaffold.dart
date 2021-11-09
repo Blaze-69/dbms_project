@@ -65,7 +65,16 @@ class MusicScreenScaffold extends StatelessWidget {
                           child: Expanded(
                             child: Padding(
                               padding: const EdgeInsets.only(left:20,right:120.0),
-                              child: TextField(
+                              child: TextFormField(
+                                  textInputAction: TextInputAction.go,
+                                  onFieldSubmitted: (val){
+                                    context.vxNav.push(
+                                      Uri(
+                                          path:Routes.searchSong,
+                                          queryParameters: {"title": val}
+                                      ),
+                                    );
+                                  },
                                   decoration: InputDecoration(
                                     hintText: 'Search',
                                     prefixIcon:Padding(

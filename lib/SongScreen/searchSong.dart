@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ui';
 
 import 'package:app/HomeScreen/models/ArtistList.dart';
 import 'package:app/globalHelpers/global-helper.dart';
@@ -18,27 +17,26 @@ const kLightColor2 = Color(0xffedf6fa);
 const kWhiteColor = Colors.white;
 const favoriteColor = Color(0xffd293c6);
 
-class HomeScreen extends StatefulWidget {
+class SearchSong extends StatefulWidget {
+
+  String title;
+  SearchSong({this.title});
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  _SearchSongState createState() => _SearchSongState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  List<Song> parseSongList(String responseBody) {
+class _SearchSongState extends State<SearchSong> {
+  List<Song> parseList(String responseBody) {
     final parsed =
-        jsonDecode(responseBody)["songsList"].cast<Map<String, dynamic>>();
+    jsonDecode(responseBody)["songsList"].cast<Map<String, dynamic>>();
     return parsed.map<Song>((json) => Song.fromJson(json)).toList();
   }
 
-  List<Artist> parseArtistList(String responseBody) {
-    final parsed =
-    jsonDecode(responseBody)["artistsList"].cast<Map<String, dynamic>>();
-    return parsed.map<Artist>((json) => Artist.fromJson(json)).toList();
-  }
-
   Future _fetchSongs() async {
-    String link = 'http://localhost:5000/api/songs/allSongs';
+    String link = 'http://localhost:5000/api/search/song?title=${widget.title}';
     final response = await GlobalHelper.checkAccessTokenForGet(link);
+
+    print(response.body);
     if (response.statusCode == 400) {
       var responseJson = json.decode(response.body);
       if (responseJson['msg'] == "Access token expired") {
@@ -56,32 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
             fontSize: 16.0);
       }
     } else {
-      var list = parseSongList(response.body);
-      return list;
-    }
-  }
-  Future _fetchArtists() async {
-    String link = 'http://localhost:5000/api/artists/allArtists';
-    final response = await GlobalHelper.checkAccessTokenForGet(link);
-    if (response.statusCode == 400) {
-      var responseJson = json.decode(response.body);
-      if (responseJson['msg'] == "Access token expired") {
-        await GlobalHelper.refresh();
-        return _fetchArtists();
-      } else {
-        Fluttertoast.showToast(
-            msg: responseJson['msg'],
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 2,
-            backgroundColor: Colors.red,
-            webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
-            textColor: Colors.white,
-            fontSize: 16.0);
-      }
-    } else {
-
-      var list = parseArtistList(response.body);
+      var list = parseList(response.body);
       return list;
     }
   }
@@ -104,62 +77,26 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       children: [
         Container(
-          height: 0.35 * size.height,
+          height: 0.70 * size.height,
           width: MediaQuery.of(context).size.width,
-          // color: Colors.purple,
-          child:
-          FutureBuilder(
-            future: _fetchArtists(),
+          child: FutureBuilder(
+            future: _fetchSongs(),
             builder: (context, AsyncSnapshot snapshot) {
               if (snapshot.connectionState == ConnectionState.done) {
+                List<Song> items = snapshot.data;
                 if (snapshot.hasData) {
-                  List<Artist> items = snapshot.data;
-                  return ScrollConfiguration(
-                    behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {
-                      PointerDeviceKind.touch,
-                      PointerDeviceKind.mouse,
-                    },),
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
+                  return ListView.builder(
                       itemCount: items.length,
-                      itemBuilder: (context, index) => _buildPlaylistItem(
-                          image: artistList[index].image,
-                          artist: items[index]),
-                    ),
-                  );
+                      itemBuilder: (context, index) {
+                        return _buildSonglistItem(items[index]);
+                      });
                 }
               }
               return Center(
                 child: CircularProgressIndicator(),
               );
             },
-          )
-        ),
-        FutureBuilder(
-          future: _fetchSongs(),
-          builder: (context, AsyncSnapshot snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.hasData) {
-                List<Song> items = snapshot.data;
-                return Expanded(
-                  child: ScrollConfiguration(
-                    behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {
-                      PointerDeviceKind.touch,
-                      PointerDeviceKind.mouse,
-                    },),
-                    child: ListView.builder(
-                        itemCount: items.length,
-                        itemBuilder: (context, index) {
-                          return _buildSonglistItem(items[index]);
-                        }),
-                  ),
-                );
-              }
-            }
-            return Center(
-              child: CircularProgressIndicator(),
-            );
-          },
+          ),
         )
       ],
     );
@@ -231,63 +168,14 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  Widget _buildPlaylistItem({ Artist artist, String image}) {
-    return InkWell(
-      onTap: () {
-        context.vxNav.push(
-            Uri(path:Routes.artistSongList,queryParameters: {"id":artist.artist_id.toString()}),
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
-        width: 250,
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20.0),
-            color: Colors.orange,
-            image: DecorationImage(image: AssetImage(image), fit: BoxFit.fill)),
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Text(
-                  artist.name,
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20),
-                ),
-              ),
-              Expanded(child: Container(height: 0)),
-              Container(
-                height: 30,
-                width: 30,
-                margin: EdgeInsets.all(10.0),
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10.0),
-                    color: Colors.white),
-                child: Icon(
-                  Icons.play_circle_outline,
-                  color: kPrimaryColor,
-                ),
-              )
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildSonglistItem(Song selectedSong) {
     return InkWell(
       onTap: () {
         context.vxNav.push(
-            Uri(
-            path:Routes.musicPlayer,
-            queryParameters: {"id": selectedSong.songId.toString()}
-            ),
+          Uri(
+              path:Routes.musicPlayer,
+              queryParameters: {"id": selectedSong.songId.toString()}
+          ),
         );
       },
       child: ListTile(

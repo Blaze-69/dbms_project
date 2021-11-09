@@ -1,31 +1,50 @@
 import 'dart:convert';
 
+import 'package:app/HomeScreen/models/ArtistList.dart';
+import 'package:app/globalHelpers/chatScreenScaffold.dart';
 import 'package:app/globalHelpers/global-helper.dart';
+import 'package:app/globalHelpers/musicScreenScaffold.dart';
+import 'package:app/globalHelpers/routes.dart';
+import 'package:app/models/groupModel.dart';
+import 'package:app/models/songModel.dart';
 import 'package:app/models/userModel.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:velocity_x/src/extensions/context_ext.dart';
 
-class PendingRequest extends StatefulWidget {
+const kPrimaryColor = Color(0xff0968B0);
+const kSecondaryColor = Color(0xff7ec8e3);
+const kLightColor = Colors.grey;
+const kLightColor2 = Color(0xffedf6fa);
+const kWhiteColor = Colors.white;
+const favoriteColor = Color(0xffd293c6);
+
+class SearchGroup extends StatefulWidget {
+
+  String name;
+  SearchGroup({this.name});
   @override
-  PendingRequestState createState() => PendingRequestState();
+  _SearchGroupState createState() => _SearchGroupState();
 }
 
-class PendingRequestState extends State<PendingRequest> {
-
-  List<User> parseList(String responseBody) {
+class _SearchGroupState extends State<SearchGroup> {
+  List<Group> parseList(String responseBody) {
     final parsed =
-    jsonDecode(responseBody)["requests"].cast<Map<String, dynamic>>();
-    return parsed.map<User>((json) => User.fromJson(json)).toList();
+    jsonDecode(responseBody)["groupsList"].cast<Map<String, dynamic>>();
+    return parsed.map<Group>((json) => Group.fromJson(json)).toList();
   }
 
-  Future _fetchRequests() async {
-    String link = 'http://localhost:5000/api/friends/requests';
+  Future _fetchGroups() async {
+    String link = 'http://localhost:5000/api/search/group?name=${widget.name}';
     final response = await GlobalHelper.checkAccessTokenForGet(link);
+
+    print(response.body);
     if (response.statusCode == 400) {
       var responseJson = json.decode(response.body);
       if (responseJson['msg'] == "Access token expired") {
         await GlobalHelper.refresh();
-        return _fetchRequests();
+        return _fetchGroups();
       } else {
         Fluttertoast.showToast(
             msg: responseJson['msg'],
@@ -43,81 +62,23 @@ class PendingRequestState extends State<PendingRequest> {
     }
   }
 
-  // Future _denyRequests() async {
-  //   String link = 'http://localhost:5000/api/friends/getFriendRequests';
-  //   final response = await GlobalHelper.checkAccessTokenForGet(link);
-
-  //   print(response.body);
-  //   if (response.statusCode == 400) {
-  //     var responseJson = json.decode(response.body);
-  //     if (responseJson['msg'] == "Access token expired") {
-  //       await GlobalHelper.refresh();
-  //       return _fetchRequests();
-  //     } else {
-  //       Fluttertoast.showToast(
-  //           msg: responseJson['msg'],
-  //           toastLength: Toast.LENGTH_SHORT,
-  //           gravity: ToastGravity.BOTTOM,
-  //           timeInSecForIosWeb: 2,
-  //           backgroundColor: Colors.red,
-  //           webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
-  //           textColor: Colors.white,
-  //           fontSize: 16.0);
-  //     }
-  //   } else {}
-  // }
-
-  Future _acceptRequests() async {
-    String link = 'http://localhost:5000/api/friends/acceptFriendRequest';
-    final response = await GlobalHelper.checkAccessTokenForGet(link);
-
-    print(response.body);
-    if (response.statusCode == 400) {
-      var responseJson = json.decode(response.body);
-      if (responseJson['msg'] == "Access token expired") {
-        await GlobalHelper.refresh();
-        return _fetchRequests();
-      } else {
-        Fluttertoast.showToast(
-            msg: responseJson['msg'],
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 2,
-            backgroundColor: Colors.red,
-            webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
-            textColor: Colors.white,
-            fontSize: 16.0);
-      }
-    } else {
-      Fluttertoast.showToast(
-          msg: "Request Accepted",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 2,
-          backgroundColor: Colors.red,
-          webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
-          textColor: Colors.white,
-          fontSize: 16.0);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ChatScreenScaffold(
       body: Column(
         children: [
           Expanded(
             child: FutureBuilder(
-              future: _fetchRequests(),
+              future: _fetchGroups(),
               builder: (context, AsyncSnapshot snapshot) {
                 if (snapshot.connectionState == ConnectionState.done) {
                   if (snapshot.hasData) {
-                    List items = snapshot.data;
+                    List groups = snapshot.data;
                     return ListView.builder(
-                        itemCount: items.length,
+                        itemCount: groups.length,
                         itemBuilder: (context, index) {
-                      return _request(items[index]);
-                    });
+                          return _result(groups[index]);
+                        });
                   }
                 }
                 return Center(
@@ -131,7 +92,7 @@ class PendingRequestState extends State<PendingRequest> {
     );
   }
 
-  Widget _request(User person) {
+  Widget _result(Group group) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
       child: Row(
@@ -154,14 +115,14 @@ class PendingRequestState extends State<PendingRequest> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(person.name,
+                Text(group.name,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         fontFamily: 'Montserrat',
                         fontSize: 17.0,
                         fontWeight: FontWeight.bold,
                         color: Colors.black)),
-                Text(person.address,
+                Text(group.artist,
                     style: TextStyle(
                         fontFamily: 'Montserrat',
                         fontSize: 12.0,
@@ -175,7 +136,7 @@ class PendingRequestState extends State<PendingRequest> {
             children: [
               IconButton(
                 onPressed: () {},
-                icon: Icon(Icons.highlight_remove_outlined),
+                icon: Icon(Icons.exit_to_app),
                 color: Colors.red,
               ),
               SizedBox(
@@ -183,7 +144,7 @@ class PendingRequestState extends State<PendingRequest> {
               ),
               IconButton(
                 onPressed: () {},
-                icon: Icon(Icons.file_download_done_outlined),
+                icon: Icon(Icons.launch),
                 color: Colors.green,
               ),
             ],
