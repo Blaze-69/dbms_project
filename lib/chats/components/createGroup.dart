@@ -54,7 +54,7 @@ class _CreateGroupState extends State<CreateGroup> {
           textColor: Colors.white,
           fontSize: 16.0);
       context.vxNav.popToRoot();
-      context.vxNav.push(Uri.parse(Routes.groups));
+      context.vxNav.push(Uri.parse(Routes.chatScreen));
     }
   }
 
@@ -86,14 +86,6 @@ class _CreateGroupState extends State<CreateGroup> {
                                   autovalidateMode:
                                       AutovalidateMode.onUserInteraction,
                                   onSaved: (val) => groupName = val,
-                                  validator: (val) {
-                                    if (!(val.isEmpty) &&
-                                        !RegExp(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
-                                            .hasMatch(val)) {
-                                      return "Group Name', 'Enter your Group Name";
-                                    }
-                                    return null;
-                                  },
                                   decoration: ThemeHelper().textInputDecoration(
                                       'Group Name', 'Enter your Group Name'),
                                 ),
@@ -106,14 +98,6 @@ class _CreateGroupState extends State<CreateGroup> {
                                   autovalidateMode:
                                       AutovalidateMode.onUserInteraction,
                                   onSaved: (val) => artistName = val,
-                                  validator: (val) {
-                                    if (!(val.isEmpty) &&
-                                        !RegExp(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
-                                            .hasMatch(val)) {
-                                      return "Artist', 'Enter your Group Artist";
-                                    }
-                                    return null;
-                                  },
                                   decoration: ThemeHelper().textInputDecoration(
                                       'Artist', 'Enter your Group Artist'),
                                 ),
