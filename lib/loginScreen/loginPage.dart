@@ -62,8 +62,8 @@ class _LoginPageState extends State<LoginPage> {
           backgroundColor: Colors.red,
           textColor: Colors.white,
           fontSize: 16.0);
-          context.vxNav.popToRoot();
-          context.vxNav.push(Uri.parse(Routes.homeScreen));
+      context.vxNav.popToRoot();
+      context.vxNav.push(Uri.parse(Routes.homeScreen));
     }
   }
 
@@ -144,7 +144,8 @@ class _LoginPageState extends State<LoginPage> {
                                 alignment: Alignment.topRight,
                                 child: GestureDetector(
                                   onTap: () {
-                                    context.vxNav.push(Uri.parse(Routes.resetPassword));
+                                    context.vxNav
+                                        .push(Uri.parse(Routes.resetPassword));
                                   },
                                   child: Text(
                                     "Forgot your password?",
@@ -193,11 +194,8 @@ class _LoginPageState extends State<LoginPage> {
                                     text: 'Create',
                                     recognizer: TapGestureRecognizer()
                                       ..onTap = () {
-                                        Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    RegistrationPage()));
+                                        context.vxNav
+                                            .push(Uri.parse(Routes.register));
                                       },
                                     style: TextStyle(
                                         fontWeight: FontWeight.bold,

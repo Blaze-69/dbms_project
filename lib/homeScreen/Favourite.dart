@@ -103,10 +103,7 @@ class _FavState extends State<Fav> {
     return GestureDetector(
       onTap: () {
         context.vxNav.push(
-          Uri(
-              path:Routes.musicPlayer,
-              queryParameters: {"id": "1"}
-          ),
+          Uri(path: Routes.musicPlayer, queryParameters: {"id": "1"}),
         );
       },
       child: Container(
@@ -165,14 +162,14 @@ class _FavState extends State<Fav> {
       ),
     );
   }
+
   Widget _buildSonglistItem(Song selectedSong) {
     return InkWell(
       onTap: () {
         context.vxNav.push(
           Uri(
-              path:Routes.musicPlayer,
-              queryParameters: {"id": selectedSong.songId.toString()}
-          ),
+              path: Routes.musicPlayer,
+              queryParameters: {"id": selectedSong.songId.toString()}),
         );
       },
       child: ListTile(
