@@ -68,7 +68,6 @@ class _SearchUserState extends State<SearchUser> {
       "friend_id": friend_id
     };
     final response = await GlobalHelper.checkAccessTokenForPost(link, body);
-    print(response.body);
     if (response.statusCode == 400) {
       var responseJson = json.decode(response.body);
       if (responseJson['msg'] == "Access token expired") {
@@ -108,29 +107,25 @@ class _SearchUserState extends State<SearchUser> {
   @override
   Widget build(BuildContext context) {
     return ChatScreenScaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: FutureBuilder(
-              future: _fetchUsers(),
-              builder: (context, AsyncSnapshot snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (snapshot.hasData) {
-                    List users = snapshot.data;
-                    return ListView.builder(
-                        itemCount: users.length,
-                        itemBuilder: (context, index) {
-                          return _result(users[index]);
-                        });
-                  }
-                }
-                return Center(
-                  child: CircularProgressIndicator(),
-                );
-              },
-            ),
-          )
-        ],
+      body: Expanded(
+        child: FutureBuilder(
+          future: _fetchUsers(),
+          builder: (context, AsyncSnapshot snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasData) {
+                List users = snapshot.data;
+                return ListView.builder(
+                    itemCount: users.length,
+                    itemBuilder: (context, index) {
+                      return _result(users[index]);
+                    });
+              }
+            }
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          },
+        ),
       ),
     );
   }
@@ -177,14 +172,7 @@ class _SearchUserState extends State<SearchUser> {
           Spacer(),
           Row(
             children: [
-              IconButton(
-                onPressed: () {},
-                icon: Icon(Icons.highlight_remove_outlined),
-                color: Colors.red,
-              ),
-              SizedBox(
-                width: 2,
-              ),
+              Text("Add Friend"),
               IconButton(
                 onPressed: () async {
                   Loader.show(context,
@@ -196,7 +184,7 @@ class _SearchUserState extends State<SearchUser> {
                   await _sendRequest( person.userId);
                   Loader.hide();
                 },
-                icon: Icon(Icons.file_download_done_outlined),
+                icon: Icon(Icons.person_add_alt_1_sharp),
                 color: Colors.green,
               ),
             ],

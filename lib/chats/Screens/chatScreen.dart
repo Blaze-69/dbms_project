@@ -1,10 +1,12 @@
 import 'dart:convert';
 
 import 'package:app/globalHelpers/global-helper.dart';
+import 'package:app/globalHelpers/routes.dart';
 import 'package:app/models/userModel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:velocity_x/src/extensions/context_ext.dart';
 
 import '../components/chat_card.dart';
 
@@ -88,28 +90,31 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: _fetchFriends(),
-      builder: (context,snapshot){
-        if(snapshot.connectionState == ConnectionState.done){
-          if(snapshot.hasData){
-            List<User> friends = snapshot.data;
-            return ListView.builder(
-                itemCount: friends.length,
-                itemBuilder: (context, index) => ChatCard(
-                  title: friends[index].name,
-                  subtitle: friends[index].address,
-                  type: 'user',
-                  function: () async {
-                    Loader.show(context,
-                        progressIndicator:
-                        CircularProgressIndicator(),
-                        themeData: Theme.of(context).copyWith(
-                            accentColor: Colors.black38),
-                        overlayColor: Color(0x99E8EAF6));
-                    await _unFriend(friends[index].userId);
-                    Loader.hide();
-                  },
-                ));
+        future: _fetchFriends(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasData) {
+              List<User> friends = snapshot.data;
+              return ListView.builder(
+                  itemCount: friends.length,
+                  itemBuilder: (context, index) =>
+                      ChatCard(
+                        id: friends[index].userId.toString(),
+                        title: friends[index].name,
+                        subtitle: friends[index].address,
+                        type: 'single',
+                        function: () async {
+                          Loader.show(context,
+                              progressIndicator:
+                              CircularProgressIndicator(),
+                              themeData: Theme.of(context).copyWith(
+                                  accentColor: Colors.black38),
+                              overlayColor: Color(0x99E8EAF6));
+                          await _unFriend(friends[index].userId);
+                          Loader.hide();
+                        },
+                      ));
+            }
           }
           return Center(
             child: CircularProgressIndicator(

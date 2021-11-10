@@ -11,19 +11,26 @@ class ChatCard extends StatelessWidget {
     this.title,
     this.subtitle,
     this.type,
+    this.id,
     this.function
   });
 
   String title;
   String subtitle;
   String type;
+  String id;
   VoidCallback function;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: (){
-        context.vxNav.push(Uri.parse(Routes.messageScreen));
+        context.vxNav.push(
+          Uri(
+              path:Routes.messageScreen,
+              queryParameters: {"type": type,"id": id,}
+          ),
+        );
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -79,7 +86,7 @@ class ChatCard extends StatelessWidget {
                 ),
               ),
             ),
-            if(type == 'user')
+            if(type == 'single')
               Row(
                 children:[
                   Text("Unfriend"),
@@ -87,7 +94,8 @@ class ChatCard extends StatelessWidget {
                   onPressed: function,
                   icon: Icon(Icons.highlight_remove_outlined),
                   color: Colors.red,
-                )],
+                )
+                ],
               )
             else if(type == 'group')
               Row(
@@ -95,9 +103,11 @@ class ChatCard extends StatelessWidget {
                   Text("Leave"),
                   IconButton(
                     onPressed: function,
-                    icon: Icon(Icons.exit_to_app),
+                    icon: Icon(Icons.exit_to_app,
+                      color: Colors.red,),
                     color: Colors.red,
-                  )],
+                  )
+                ],
               )
           ],
         ),
