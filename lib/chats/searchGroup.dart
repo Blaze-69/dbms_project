@@ -9,6 +9,7 @@ import 'package:app/models/groupModel.dart';
 import 'package:app/models/songModel.dart';
 import 'package:app/models/userModel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:velocity_x/src/extensions/context_ext.dart';
@@ -62,6 +63,49 @@ class _SearchGroupState extends State<SearchGroup> {
     }
   }
 
+  Future _joinGroups(group_id) async {
+    String link = 'http://localhost:5000/api/groups/join';
+    final body = {
+      "group_id": group_id
+    };
+    print(body);
+    final response = await GlobalHelper.checkAccessTokenForUpdate(link, body);
+    print(response.body);
+    if (response.statusCode == 400) {
+      var responseJson = json.decode(response.body);
+      if (responseJson['msg'] == "Access token expired") {
+        await GlobalHelper.refresh();
+        return _joinGroups(group_id);
+      } else {
+        Fluttertoast.showToast(
+            msg: responseJson['msg'],
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 2,
+            backgroundColor: Colors.red,
+            webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
+            textColor: Colors.white,
+            fontSize: 16.0);
+      }
+    } else {
+      var responseJson = json.decode(response.body);
+      Fluttertoast.showToast(
+          msg: responseJson['msg'],
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 2,
+          webBgColor: "linear-gradient(to right, #32CD32  , #32CD32)",
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0);
+      context.vxNav.replace(
+        Uri(
+            path:Routes.searchGroup,
+            queryParameters: {"name": widget.name}
+        ),
+      );
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return ChatScreenScaffold(
@@ -134,16 +178,18 @@ class _SearchGroupState extends State<SearchGroup> {
           Spacer(),
           Row(
             children: [
+              Text("Join"),
               IconButton(
-                onPressed: () {},
-                icon: Icon(Icons.exit_to_app),
-                color: Colors.red,
-              ),
-              SizedBox(
-                width: 2,
-              ),
-              IconButton(
-                onPressed: () {},
+                onPressed: () async {
+                  Loader.show(context,
+                      progressIndicator:
+                      CircularProgressIndicator(),
+                      themeData: Theme.of(context).copyWith(
+                          accentColor: Colors.black38),
+                      overlayColor: Color(0x99E8EAF6));
+                  await _joinGroups(group.group_id);
+                  Loader.hide();
+                },
                 icon: Icon(Icons.launch),
                 color: Colors.green,
               ),

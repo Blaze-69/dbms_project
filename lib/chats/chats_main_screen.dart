@@ -19,8 +19,6 @@ class _MainScreenState extends State<MainScreen> {
   Future _fetchfriends() async {
     String link = 'http://localhost:5000/api/friends';
     final response = await GlobalHelper.checkAccessTokenForGet(link);
-
-    print(response.body);
     if (response.statusCode == 400) {
       var responseJson = json.decode(response.body);
       if (responseJson['msg'] == "Access token expired") {

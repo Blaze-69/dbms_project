@@ -22,7 +22,7 @@ class _CreateGroupState extends State<CreateGroup> {
   final _formKey = GlobalKey<FormState>();
 
   Future _createGroup() async {
-    String link = 'http://localhost:5000/api/groups/createGroup';
+    String link = 'http://localhost:5000/api/groups';
     final body = {"name": groupName, "artist": artistName};
     final response = await GlobalHelper.checkAccessTokenForPost(link, body);
 

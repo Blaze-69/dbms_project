@@ -1,6 +1,7 @@
 import 'package:app/SongScreen/ArtistSong.dart';
 import 'package:app/SongScreen/MusicPlayer.dart';
 import 'package:app/chats/Screens/chatGroupScreen.dart';
+import 'package:app/chats/Screens/editGroup.dart';
 import 'package:app/chats/components/createGroup.dart';
 import 'package:app/chats/searchGroup.dart';
 import 'package:app/chats/searchUser.dart';
@@ -60,12 +61,28 @@ class MyApp extends StatelessWidget {
         ),
       );
     },
+    Routes.editGroup: (uri, _) {
+      final group_id = uri.queryParameters["id"];
+      return MaterialPage(
+        child: EditGroup(
+          group_id: group_id,
+        ),
+      );
+    },
     Routes.chatScreen: (_, __) => MaterialPage(child: MainScreen()),
-    Routes.messageScreen: (_, __) => MaterialPage(child: MessageScreen()),
+    Routes.messageScreen: (uri, _) {
+      final to_user_id = uri.queryParameters["id"];
+      final type = uri.queryParameters["type"];
+      return MaterialPage(
+        child: MessageScreen(
+          to_user_id: to_user_id,
+          type: type,
+        ),
+      );
+    },
     Routes.editProfile: (_, __) => MaterialPage(child: EditProfile()),
     Routes.resetPassword: (_, __) => MaterialPage(child: ResetPasswordPage()),
     Routes.createGroup: (_, __) => MaterialPage(child: CreateGroup()),
-    Routes.groups: (_, __) => MaterialPage(child: GroupChatScreen()),
   });
   @override
   Widget build(BuildContext context) {

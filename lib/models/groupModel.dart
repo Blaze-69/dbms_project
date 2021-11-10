@@ -18,7 +18,7 @@ class Group {
   factory Group.fromJson(Map<String, dynamic> json) => Group(
     name: json["name"] == null ? null : json["name"],
     artist: json["name"] == null ? null : json["artist"],
-    group_id: json["user_id"] == null ? null : json["group_id"],
+    group_id: json["group_id"] == null ? null : json["group_id"],
   );
 
   Map<String, dynamic> toJson() => {
