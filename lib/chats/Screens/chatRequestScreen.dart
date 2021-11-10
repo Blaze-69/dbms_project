@@ -1,9 +1,12 @@
 import 'dart:convert';
 
 import 'package:app/globalHelpers/global-helper.dart';
+import 'package:app/globalHelpers/routes.dart';
 import 'package:app/models/userModel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:velocity_x/src/extensions/context_ext.dart';
 
 class PendingRequest extends StatefulWidget {
   @override
@@ -43,40 +46,18 @@ class PendingRequestState extends State<PendingRequest> {
     }
   }
 
-  // Future _denyRequests() async {
-  //   String link = 'http://localhost:5000/api/friends/getFriendRequests';
-  //   final response = await GlobalHelper.checkAccessTokenForGet(link);
+  Future _denyRequests(friend_id) async {
+    String link = 'http://localhost:5000/api/friends/requests';
+    final body = {
+      "friend_id": friend_id
+    };
+    final response = await GlobalHelper.checkAccessTokenForDelete(link, body);
 
-  //   print(response.body);
-  //   if (response.statusCode == 400) {
-  //     var responseJson = json.decode(response.body);
-  //     if (responseJson['msg'] == "Access token expired") {
-  //       await GlobalHelper.refresh();
-  //       return _fetchRequests();
-  //     } else {
-  //       Fluttertoast.showToast(
-  //           msg: responseJson['msg'],
-  //           toastLength: Toast.LENGTH_SHORT,
-  //           gravity: ToastGravity.BOTTOM,
-  //           timeInSecForIosWeb: 2,
-  //           backgroundColor: Colors.red,
-  //           webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
-  //           textColor: Colors.white,
-  //           fontSize: 16.0);
-  //     }
-  //   } else {}
-  // }
-
-  Future _acceptRequests() async {
-    String link = 'http://localhost:5000/api/friends/acceptFriendRequest';
-    final response = await GlobalHelper.checkAccessTokenForGet(link);
-
-    print(response.body);
     if (response.statusCode == 400) {
       var responseJson = json.decode(response.body);
       if (responseJson['msg'] == "Access token expired") {
         await GlobalHelper.refresh();
-        return _fetchRequests();
+        return _acceptRequests(friend_id);
       } else {
         Fluttertoast.showToast(
             msg: responseJson['msg'],
@@ -89,15 +70,55 @@ class PendingRequestState extends State<PendingRequest> {
             fontSize: 16.0);
       }
     } else {
+      var responseJson = json.decode(response.body);
       Fluttertoast.showToast(
-          msg: "Request Accepted",
+          msg: responseJson['msg'],
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.BOTTOM,
           timeInSecForIosWeb: 2,
+          webBgColor: "linear-gradient(to right, #32CD32  , #32CD32)",
           backgroundColor: Colors.red,
-          webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
           textColor: Colors.white,
           fontSize: 16.0);
+      context.vxNav.push(Uri.parse(Routes.chatScreen));
+    }
+  }
+
+  Future _acceptRequests(friend_id) async {
+    String link = 'http://localhost:5000/api/friends/requests';
+    final body = {
+      "friend_id": friend_id
+    };
+    final response = await GlobalHelper.checkAccessTokenForUpdate(link, body);
+
+    if (response.statusCode == 400) {
+      var responseJson = json.decode(response.body);
+      if (responseJson['msg'] == "Access token expired") {
+        await GlobalHelper.refresh();
+        return _acceptRequests(friend_id);
+      } else {
+        Fluttertoast.showToast(
+            msg: responseJson['msg'],
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 2,
+            backgroundColor: Colors.red,
+            webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
+            textColor: Colors.white,
+            fontSize: 16.0);
+      }
+    } else {
+      var responseJson = json.decode(response.body);
+      Fluttertoast.showToast(
+          msg: responseJson['msg'],
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 2,
+          webBgColor: "linear-gradient(to right, #32CD32  , #32CD32)",
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0);
+          context.vxNav.push(Uri.parse(Routes.chatScreen));
     }
   }
 
@@ -174,7 +195,16 @@ class PendingRequestState extends State<PendingRequest> {
           Row(
             children: [
               IconButton(
-                onPressed: () {},
+                onPressed: () async {
+                  Loader.show(context,
+                      progressIndicator:
+                      CircularProgressIndicator(),
+                      themeData: Theme.of(context).copyWith(
+                          accentColor: Colors.black38),
+                      overlayColor: Color(0x99E8EAF6));
+                  await _denyRequests(person.userId);
+                  Loader.hide();
+                },
                 icon: Icon(Icons.highlight_remove_outlined),
                 color: Colors.red,
               ),
@@ -182,7 +212,16 @@ class PendingRequestState extends State<PendingRequest> {
                 width: 2,
               ),
               IconButton(
-                onPressed: () {},
+                onPressed: () async {
+                  Loader.show(context,
+                      progressIndicator:
+                      CircularProgressIndicator(),
+                      themeData: Theme.of(context).copyWith(
+                          accentColor: Colors.black38),
+                      overlayColor: Color(0x99E8EAF6));
+                  await _acceptRequests(person.userId);
+                  Loader.hide();
+                },
                 icon: Icon(Icons.file_download_done_outlined),
                 color: Colors.green,
               ),
