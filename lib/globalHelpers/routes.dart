@@ -14,4 +14,6 @@ class Routes {
   static String searchUser = '/search/user';
   static String searchGroup = '/search/group';
   static String resetPassword = '/resetPassword';
+  static String createGroup = '/createGroup';
+  static String groups = "/groups";
 }

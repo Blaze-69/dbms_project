@@ -1,15 +1,10 @@
 import 'dart:convert';
 
-import 'package:app/chats/components/chatmodel.dart';
-import 'package:app/globalHelpers/constants.dart';
-import 'package:app/globalHelpers/filledOutline.dart';
 import 'package:app/globalHelpers/global-helper.dart';
-import 'package:app/globalHelpers/routes.dart';
 import 'package:app/models/userModel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:velocity_x/src/extensions/context_ext.dart';
 
 import '../components/chat_card.dart';
 
@@ -19,10 +14,9 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-
   List<User> parseList(String responseBody) {
     final parsed =
-    jsonDecode(responseBody)["usersList"].cast<Map<String, dynamic>>();
+        jsonDecode(responseBody)["usersList"].cast<Map<String, dynamic>>();
     return parsed.map<User>((json) => User.fromJson(json)).toList();
   }
 
@@ -117,13 +111,11 @@ class _ChatScreenState extends State<ChatScreen> {
                   },
                 ));
           }
-        }
-        return Center(
-          child: CircularProgressIndicator(
-            color: Colors.deepOrange,
-          ),
-        );
-      }
-    );
+          return Center(
+            child: CircularProgressIndicator(
+              color: Colors.deepOrange,
+            ),
+          );
+        });
   }
 }

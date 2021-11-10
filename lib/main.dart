@@ -1,5 +1,7 @@
 import 'package:app/SongScreen/ArtistSong.dart';
 import 'package:app/SongScreen/MusicPlayer.dart';
+import 'package:app/chats/Screens/chatGroupScreen.dart';
+import 'package:app/chats/components/createGroup.dart';
 import 'package:app/chats/searchGroup.dart';
 import 'package:app/chats/searchUser.dart';
 import 'package:app/globalHelpers/routes.dart';
@@ -37,27 +39,15 @@ class MyApp extends StatelessWidget {
     },
     Routes.searchSong: (uri, __) {
       final title = uri.queryParameters["title"];
-      return MaterialPage(
-          child: SearchSong(
-              title: title
-          )
-      );
+      return MaterialPage(child: SearchSong(title: title));
     },
     Routes.searchUser: (uri, __) {
       final name = uri.queryParameters["name"];
-      return MaterialPage(
-          child: SearchUser(
-              name: name
-          )
-      );
+      return MaterialPage(child: SearchUser(name: name));
     },
     Routes.searchGroup: (uri, __) {
       final name = uri.queryParameters["name"];
-      return MaterialPage(
-          child: SearchGroup(
-              name: name
-          )
-      );
+      return MaterialPage(child: SearchGroup(name: name));
     },
     Routes.profile: (_, __) => MaterialPage(child: Profile()),
     Routes.changePassword: (_, __) => MaterialPage(child: ChangePassword()),
@@ -70,11 +60,12 @@ class MyApp extends StatelessWidget {
         ),
       );
     },
-
     Routes.chatScreen: (_, __) => MaterialPage(child: MainScreen()),
     Routes.messageScreen: (_, __) => MaterialPage(child: MessageScreen()),
     Routes.editProfile: (_, __) => MaterialPage(child: EditProfile()),
     Routes.resetPassword: (_, __) => MaterialPage(child: ResetPasswordPage()),
+    Routes.createGroup: (_, __) => MaterialPage(child: CreateGroup()),
+    Routes.groups: (_, __) => MaterialPage(child: GroupChatScreen()),
   });
   @override
   Widget build(BuildContext context) {

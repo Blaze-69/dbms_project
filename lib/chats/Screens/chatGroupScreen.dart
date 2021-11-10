@@ -16,10 +16,9 @@ class GroupChatScreen extends StatefulWidget {
 }
 
 class _GroupChatScreenState extends State<GroupChatScreen> {
-
   List<Group> parseList(String responseBody) {
     final parsed =
-    jsonDecode(responseBody)["groupsList"].cast<Map<String, dynamic>>();
+        jsonDecode(responseBody)["groupsList"].cast<Map<String, dynamic>>();
     return parsed.map<Group>((json) => Group.fromJson(json)).toList();
   }
 
@@ -52,27 +51,35 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: _fetchGroups(),
-        builder: (context,snapshot){
-          if(snapshot.connectionState == ConnectionState.done){
-            if(snapshot.hasData){
-              List<Group> groups = snapshot.data;
-              return ListView.builder(
-                  itemCount: groups.length,
-                  itemBuilder: (context, index) => ChatCard(
-                    title: groups[index].name,
-                    subtitle: groups[index].artist,
-                    type: 'group',
-                  ));
+    return Scaffold(
+      body: FutureBuilder(
+          future: _fetchGroups(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasData) {
+                List<Group> groups = snapshot.data;
+                return ListView.builder(
+                    itemCount: groups.length,
+                    itemBuilder: (context, index) => ChatCard(
+                          title: groups[index].name,
+                          subtitle: groups[index].artist,
+                          type: 'group',
+                        ));
+              }
             }
-          }
-          return Center(
-            child: CircularProgressIndicator(
-              color: Colors.deepOrange,
-            ),
-          );
-        }
+            return Center(
+              child: CircularProgressIndicator(
+                color: Colors.deepOrange,
+              ),
+            );
+          }),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          context.vxNav.push(Uri.parse(Routes.createGroup));
+        },
+        child: const Icon(Icons.navigation),
+        backgroundColor: Colors.green,
+      ),
     );
   }
 }
