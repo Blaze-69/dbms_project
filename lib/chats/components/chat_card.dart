@@ -1,4 +1,3 @@
-import 'package:app/chats/components/chatmodel.dart';
 import 'package:app/globalHelpers/constants.dart';
 import 'package:app/globalHelpers/routes.dart';
 import 'package:app/models/userModel.dart';
@@ -7,13 +6,7 @@ import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:velocity_x/src/extensions/context_ext.dart';
 
 class ChatCard extends StatelessWidget {
-  ChatCard({
-    this.title,
-    this.subtitle,
-    this.type,
-    this.id,
-    this.function
-  });
+  ChatCard({this.title, this.subtitle, this.type, this.id, this.function});
 
   String title;
   String subtitle;
@@ -24,12 +17,12 @@ class ChatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: (){
+      onTap: () {
         context.vxNav.push(
-          Uri(
-              path:Routes.messageScreen,
-              queryParameters: {"type": type,"id": id,}
-          ),
+          Uri(path: Routes.messageScreen, queryParameters: {
+            "type": type,
+            "id": id,
+          }),
         );
       },
       child: Padding(
@@ -86,25 +79,27 @@ class ChatCard extends StatelessWidget {
                 ),
               ),
             ),
-            if(type == 'single')
+            if (type == 'single')
               Row(
-                children:[
+                children: [
                   Text("Unfriend"),
                   IconButton(
-                  onPressed: function,
-                  icon: Icon(Icons.highlight_remove_outlined),
-                  color: Colors.red,
-                )
+                    onPressed: function,
+                    icon: Icon(Icons.highlight_remove_outlined),
+                    color: Colors.red,
+                  )
                 ],
               )
-            else if(type == 'group')
+            else if (type == 'group')
               Row(
-                children:[
+                children: [
                   Text("Leave"),
                   IconButton(
                     onPressed: function,
-                    icon: Icon(Icons.exit_to_app,
-                      color: Colors.red,),
+                    icon: Icon(
+                      Icons.exit_to_app,
+                      color: Colors.red,
+                    ),
                     color: Colors.red,
                   )
                 ],
