@@ -33,7 +33,12 @@ class AppDrawer extends StatelessWidget {
               text: 'Chat Home',
               onTap: () {
                   Navigator.pop(context);
-                  context.vxNav.push(Uri.parse(Routes.chatScreen));
+                  context.vxNav.push(
+                      Uri(
+                          path:Routes.chatScreen,
+                        fragment: 'friends'
+                      ),
+                  );
               }),
           _createDrawerItem(
               icon: Icons.logout,

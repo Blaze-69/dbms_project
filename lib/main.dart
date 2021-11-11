@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app/SongScreen/ArtistSong.dart';
 import 'package:app/SongScreen/MusicPlayer.dart';
 import 'package:app/chats/Screens/chatGroupScreen.dart';
@@ -12,10 +14,11 @@ import 'package:app/loginScreen/editprofile.dart';
 import 'package:app/loginScreen/loginPage.dart';
 import 'package:app/loginScreen/register.dart';
 import 'package:app/loginScreen/resetPassword.dart';
-import 'package:app/loginScreen/splashScreen.dart';
 import 'package:app/profileSection/profileItems/changePassword.dart';
 import 'package:app/profileSection/profileSection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_strategy/url_strategy.dart';
 import 'package:velocity_x/velocity_x.dart';
 
@@ -24,13 +27,66 @@ import 'chats/chats_main_screen.dart';
 import 'chats/components/message.dart';
 
 void main() {
-  setPathUrlStrategy();
+  Vx.setPathUrlStrategy();
   runApp(MyApp());
 }
 
+class MyObs extends VxObserver {
+  @override
+  void didChangeRoute(Uri route, Page page, String pushOrPop) {
+    print("${route.path} - $pushOrPop");
+  }
+
+  @override
+  void didPush(Route route, Route previousRoute) {
+    print('Pushed a route');
+  }
+
+  @override
+  void didPop(Route route, Route previousRoute) {
+    print('Popped a route');
+  }
+}
+
+Future<bool> checkLoggedIn() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  final accessToken = prefs.get("accessToken");
+  print("access token $accessToken");
+  if (accessToken != null) {
+    return true;
+  }
+  return false;
+}
+
+
 class MyApp extends StatelessWidget {
-  static final navigator = VxNavigator(routes: {
-    '/': (_, __) => MaterialPage(child: SplashScreen()),
+  static final navigator = VxNavigator(
+      observers: [MyObs()],
+      routes: {
+        '/': (uri,_) {
+          return MaterialPage(
+              child: FutureBuilder(
+                future: checkLoggedIn(),
+                builder: (context,snapshot){
+                  if(snapshot.connectionState == ConnectionState.done){
+                    if(snapshot.hasData){
+                      if(snapshot.data == false){
+                        return LoginPage();
+                      }
+                      else{
+                        return HomeScreen();
+                      }
+                    }
+                  }
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.deepOrange,
+                    ),
+                  );
+                },
+              )
+          );
+        },
     Routes.loginPage: (_, __) => MaterialPage(child: LoginPage()),
     Routes.homeScreen: (_, __) => MaterialPage(child: HomeScreen()),
     Routes.register: (_, __) => MaterialPage(child: RegistrationPage()),
@@ -69,7 +125,14 @@ class MyApp extends StatelessWidget {
         ),
       );
     },
-    Routes.chatScreen: (_, __) => MaterialPage(child: MainScreen()),
+    Routes.chatScreen: (uri, _) {
+      final state = uri.fragment;
+      return MaterialPage(
+        child: MainScreen(
+          state: state,
+        ),
+      );
+    },
     Routes.messageScreen: (uri, _) {
       final to_user_id = uri.queryParameters["id"];
       final type = uri.queryParameters["type"];
@@ -84,6 +147,7 @@ class MyApp extends StatelessWidget {
     Routes.resetPassword: (_, __) => MaterialPage(child: ResetPasswordPage()),
     Routes.createGroup: (_, __) => MaterialPage(child: CreateGroup()),
   });
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(

@@ -84,7 +84,12 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           backgroundColor: Colors.red,
           textColor: Colors.white,
           fontSize: 16.0);
-      context.vxNav.push(Uri.parse(Routes.chatScreen));
+          context.vxNav.push(
+            Uri(
+                path:Routes.chatScreen,
+                fragment: 'groups'
+            ),
+          );
     }
   }
 
