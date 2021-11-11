@@ -31,7 +31,7 @@ class _MessageScreenState extends State<MessageScreen> {
       "autoConnect": false,
     });
     socket.connect();
-    socket.emit("signIn", {"clientId": "1"});
+    // socket.emit("signIn", {"clientId": "1"});
   }
 
   void sendMessage() {
