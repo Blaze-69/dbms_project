@@ -48,6 +48,7 @@ class MyObs extends VxObserver {
   }
 }
 
+
 Future<bool> checkLoggedIn() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   final accessToken = prefs.get("accessToken");
@@ -58,24 +59,33 @@ Future<bool> checkLoggedIn() async {
   return false;
 }
 
+class MyApp extends StatefulWidget{
 
-class MyApp extends StatelessWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return _MyAppState();
+  }
+}
+
+class _MyAppState extends State<MyApp> {
   static final navigator = VxNavigator(
       observers: [MyObs()],
       routes: {
-        '/': (uri,_) {
+        '/': (_,__) {
           return MaterialPage(
               child: FutureBuilder(
                 future: checkLoggedIn(),
                 builder: (context,snapshot){
                   if(snapshot.connectionState == ConnectionState.done){
                     if(snapshot.hasData){
-                      if(snapshot.data == false){
-                        return LoginPage();
-                      }
-                      else{
-                        return HomeScreen();
-                      }
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        context.vxNav.replace(Uri.parse(
+                          (snapshot.data == false) ?
+                          Routes.loginPage
+                          :
+                          Routes.homeScreen
+                        ));
+                      });
                     }
                   }
                   return Center(
@@ -87,66 +97,66 @@ class MyApp extends StatelessWidget {
               )
           );
         },
-    Routes.loginPage: (_, __) => MaterialPage(child: LoginPage()),
-    Routes.homeScreen: (_, __) => MaterialPage(child: HomeScreen()),
-    Routes.register: (_, __) => MaterialPage(child: RegistrationPage()),
-    Routes.artistSongList: (uri, __) {
-      final artist_id = uri.queryParameters["id"];
-      return MaterialPage(child: ArtistSongList(artist_id: artist_id));
-    },
-    Routes.searchSong: (uri, __) {
-      final title = uri.queryParameters["title"];
-      return MaterialPage(child: SearchSong(title: title));
-    },
-    Routes.searchUser: (uri, __) {
-      final name = uri.queryParameters["name"];
-      return MaterialPage(child: SearchUser(name: name));
-    },
-    Routes.searchGroup: (uri, __) {
-      final name = uri.queryParameters["name"];
-      return MaterialPage(child: SearchGroup(name: name));
-    },
-    Routes.profile: (_, __) => MaterialPage(child: Profile()),
-    Routes.changePassword: (_, __) => MaterialPage(child: ChangePassword()),
-    Routes.fav: (_, __) => MaterialPage(child: Fav()),
-    Routes.musicPlayer: (uri, _) {
-      final song_id = uri.queryParameters["id"];
-      return MaterialPage(
-        child: MusicPlayer(
-          song_id: song_id,
-        ),
-      );
-    },
-    Routes.editGroup: (uri, _) {
-      final group_id = uri.queryParameters["id"];
-      return MaterialPage(
-        child: EditGroup(
-          group_id: group_id,
-        ),
-      );
-    },
-    Routes.chatScreen: (uri, _) {
-      final state = uri.fragment;
-      return MaterialPage(
-        child: MainScreen(
-          state: state,
-        ),
-      );
-    },
-    Routes.messageScreen: (uri, _) {
-      final to_user_id = uri.queryParameters["id"];
-      final type = uri.queryParameters["type"];
-      return MaterialPage(
-        child: MessageScreen(
-          to_user_id: to_user_id,
-          type: type,
-        ),
-      );
-    },
-    Routes.editProfile: (_, __) => MaterialPage(child: EditProfile()),
-    Routes.resetPassword: (_, __) => MaterialPage(child: ResetPasswordPage()),
-    Routes.createGroup: (_, __) => MaterialPage(child: CreateGroup()),
-  });
+        Routes.loginPage: (_, __) => MaterialPage(child: LoginPage()),
+        Routes.homeScreen: (_, __) => MaterialPage(child: HomeScreen()),
+        Routes.register: (_, __) => MaterialPage(child: RegistrationPage()),
+        Routes.artistSongList: (uri, __) {
+          final artist_id = uri.queryParameters["id"];
+          return MaterialPage(child: ArtistSongList(artist_id: artist_id));
+        },
+        Routes.searchSong: (uri, __) {
+          final title = uri.queryParameters["title"];
+          return MaterialPage(child: SearchSong(title: title));
+        },
+        Routes.searchUser: (uri, __) {
+          final name = uri.queryParameters["name"];
+          return MaterialPage(child: SearchUser(name: name));
+        },
+        Routes.searchGroup: (uri, __) {
+          final name = uri.queryParameters["name"];
+          return MaterialPage(child: SearchGroup(name: name));
+        },
+        Routes.profile: (_, __) => MaterialPage(child: Profile()),
+        Routes.changePassword: (_, __) => MaterialPage(child: ChangePassword()),
+        Routes.fav: (_, __) => MaterialPage(child: Fav()),
+        Routes.musicPlayer: (uri, _) {
+          final song_id = uri.queryParameters["id"];
+          return MaterialPage(
+            child: MusicPlayer(
+              song_id: song_id,
+            ),
+          );
+        },
+        Routes.editGroup: (uri, _) {
+          final group_id = uri.queryParameters["id"];
+          return MaterialPage(
+            child: EditGroup(
+              group_id: group_id,
+            ),
+          );
+        },
+        Routes.chatScreen: (uri, _) {
+          final state = uri.fragment;
+          return MaterialPage(
+            child: MainScreen(
+              state: state,
+            ),
+          );
+        },
+        Routes.messageScreen: (uri, _) {
+          final to_user_id = uri.queryParameters["id"];
+          final type = uri.queryParameters["type"];
+          return MaterialPage(
+            child: MessageScreen(
+              to_user_id: to_user_id,
+              type: type,
+            ),
+          );
+        },
+        Routes.editProfile: (_, __) => MaterialPage(child: EditProfile()),
+        Routes.resetPassword: (_, __) => MaterialPage(child: ResetPasswordPage()),
+        Routes.createGroup: (_, __) => MaterialPage(child: CreateGroup()),
+      });
 
   @override
   Widget build(BuildContext context) {
