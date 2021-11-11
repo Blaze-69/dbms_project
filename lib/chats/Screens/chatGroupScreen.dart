@@ -1,6 +1,4 @@
 import 'dart:convert';
-
-import 'package:app/chats/components/chatmodel.dart';
 import 'package:app/globalHelpers/global-helper.dart';
 import 'package:app/globalHelpers/routes.dart';
 import 'package:app/models/groupModel.dart';
