@@ -75,7 +75,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
           backgroundColor: Colors.red,
           textColor: Colors.white,
           fontSize: 16.0);
-      context.vxNav.popToRoot();
       context.vxNav.push(Uri.parse(Routes.homeScreen));
     }
   }

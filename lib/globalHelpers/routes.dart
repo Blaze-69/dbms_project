@@ -10,10 +10,10 @@ class Routes {
   static String chatScreen = '/chatscreen';
   static String messageScreen = '/messagescreen';
   static String editProfile = 'profile/edit';
-  static String editGroup = 'group/edit';
+  static String editGroup = '/group/edit';
   static String searchSong = '/search/song';
   static String searchUser = '/search/user';
   static String searchGroup = '/search/group';
   static String resetPassword = '/resetPassword';
-  static String createGroup = 'group/create';
+  static String createGroup = '/group/create';
 }

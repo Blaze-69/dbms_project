@@ -54,7 +54,12 @@ class _CreateGroupState extends State<CreateGroup> {
           textColor: Colors.white,
           fontSize: 16.0);
       context.vxNav.popToRoot();
-      context.vxNav.push(Uri.parse(Routes.chatScreen));
+      context.vxNav.push(
+        Uri(
+            path:Routes.chatScreen,
+            fragment: 'groups'
+        ),
+      );
     }
   }
 

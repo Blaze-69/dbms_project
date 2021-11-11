@@ -107,25 +107,23 @@ class _SearchUserState extends State<SearchUser> {
   @override
   Widget build(BuildContext context) {
     return ChatScreenScaffold(
-      body: Expanded(
-        child: FutureBuilder(
-          future: _fetchUsers(),
-          builder: (context, AsyncSnapshot snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.hasData) {
-                List users = snapshot.data;
-                return ListView.builder(
-                    itemCount: users.length,
-                    itemBuilder: (context, index) {
-                      return _result(users[index]);
-                    });
-              }
+      body: FutureBuilder(
+        future: _fetchUsers(),
+        builder: (context, AsyncSnapshot snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasData) {
+              List users = snapshot.data;
+              return ListView.builder(
+                  itemCount: users.length,
+                  itemBuilder: (context, index) {
+                    return _result(users[index]);
+                  });
             }
-            return Center(
-              child: CircularProgressIndicator(),
-            );
-          },
-        ),
+          }
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        },
       ),
     );
   }

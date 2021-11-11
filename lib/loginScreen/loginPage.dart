@@ -62,7 +62,6 @@ class _LoginPageState extends State<LoginPage> {
           backgroundColor: Colors.red,
           textColor: Colors.white,
           fontSize: 16.0);
-      context.vxNav.popToRoot();
       context.vxNav.push(Uri.parse(Routes.homeScreen));
     }
   }
