@@ -3,22 +3,44 @@ import 'dart:convert';
 import 'package:app/globalHelpers/chatScreenScaffold.dart';
 import 'package:app/globalHelpers/global-helper.dart';
 import 'package:app/globalHelpers/routes.dart';
+import 'package:app/globalHelpers/theme.dart';
 import 'package:app/models/groupModel.dart';
 import 'package:app/models/userModel.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:velocity_x/src/extensions/context_ext.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class MessageScreen extends StatefulWidget {
   String to_user_id;
   String type;
-  MessageScreen({this.to_user_id,this.type});
+  MessageScreen({this.to_user_id, this.type});
 
   @override
   _MessageScreenState createState() => _MessageScreenState();
 }
 
 class _MessageScreenState extends State<MessageScreen> {
+  IO.Socket socket;
+  String message = "";
+  Future<User> user;
+  User currentUser;
+  void _connect() async {
+    socket = IO.io("http://192.168.1.5:5000", <String, dynamic>{
+      "transports": ["websocket"],
+      "autoConnect": false,
+    });
+    socket.connect();
+    socket.emit("signIn", {"clientId": "1"});
+  }
+
+  void sendMessage() {
+    socket.emit("message",
+        {"message": message, "from_id": "2", "to_user": widget.to_user_id});
+    setState(() {
+      message = "";
+    });
+  }
 
   Future _fetchGroup() async {
     print("fetchgroup");
@@ -47,6 +69,7 @@ class _MessageScreenState extends State<MessageScreen> {
       return group;
     }
   }
+
   Future _fetchUser() async {
     String link = 'http://localhost:5000/api/user/${widget.to_user_id}';
     final response = await GlobalHelper.checkAccessTokenForGet(link);
@@ -74,17 +97,25 @@ class _MessageScreenState extends State<MessageScreen> {
   }
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    user = GlobalHelper.fetchCurrentUser();
+    _connect();
+  }
+
+  @override
   Widget build(BuildContext context) {
     int prevUserId;
     return ChatScreenScaffold(
       body: FutureBuilder(
-        future: (widget.type == 'single')? _fetchUser():_fetchGroup(),
-        builder: (context,snapshot){
-          if(snapshot.connectionState == ConnectionState.done){
-            if(snapshot.hasData){
+        future: (widget.type == 'single') ? _fetchUser() : _fetchGroup(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasData) {
               User user;
               Group group;
-              if(widget.type == 'single'){
+              if (widget.type == 'single') {
                 User user = snapshot.data;
                 return Scaffold(
                   backgroundColor: Color(0xFFF6F6F6),
@@ -127,27 +158,27 @@ class _MessageScreenState extends State<MessageScreen> {
                       ),
                     ),
                     actions: [
-                      if(widget.type == 'group')
+                      if (widget.type == 'group')
                         PopupMenuButton<String>(
-                          onSelected: (val){
-                            switch(val){
-                              case 'GroupInfo': {
-                                context.vxNav.push(
-                                  Uri(
-                                      path:Routes.editGroup,
-                                      queryParameters: {"id": "1"}
-                                  ),
-                                );
-                              }
-                              break;
-                              default : {
-                                context.vxNav.push(
-                                  Uri(
-                                      path:Routes.editGroup,
-                                      queryParameters: {"id": "1"}
-                                  ),
-                                );
-                              }
+                          onSelected: (val) {
+                            switch (val) {
+                              case 'GroupInfo':
+                                {
+                                  context.vxNav.push(
+                                    Uri(
+                                        path: Routes.editGroup,
+                                        queryParameters: {"id": "1"}),
+                                  );
+                                }
+                                break;
+                              default:
+                                {
+                                  context.vxNav.push(
+                                    Uri(
+                                        path: Routes.editGroup,
+                                        queryParameters: {"id": "1"}),
+                                  );
+                                }
                             }
                           },
                           itemBuilder: (BuildContext context) {
@@ -181,8 +212,7 @@ class _MessageScreenState extends State<MessageScreen> {
                     ],
                   ),
                 );
-              }
-              else{
+              } else {
                 Group group = snapshot.data;
                 return Scaffold(
                   backgroundColor: Color(0xFFF6F6F6),
@@ -226,25 +256,25 @@ class _MessageScreenState extends State<MessageScreen> {
                     ),
                     actions: [
                       PopupMenuButton<String>(
-                        onSelected: (val){
-                          switch(val){
-                            case 'GroupInfo': {
-                              context.vxNav.push(
-                                Uri(
-                                    path:Routes.editGroup,
-                                    queryParameters: {"id": group.group_id.toString()}
-                                ),
-                              );
-                            }
-                            break;
-                            default : {
-                              context.vxNav.push(
-                                Uri(
-                                    path:Routes.editGroup,
-                                    queryParameters: {"id": group.group_id.toString()}
-                                ),
-                              );
-                            }
+                        onSelected: (val) {
+                          switch (val) {
+                            case 'GroupInfo':
+                              {
+                                context.vxNav.push(
+                                  Uri(path: Routes.editGroup, queryParameters: {
+                                    "id": group.group_id.toString()
+                                  }),
+                                );
+                              }
+                              break;
+                            default:
+                              {
+                                context.vxNav.push(
+                                  Uri(path: Routes.editGroup, queryParameters: {
+                                    "id": group.group_id.toString()
+                                  }),
+                                );
+                              }
                           }
                         },
                         itemBuilder: (BuildContext context) {
@@ -324,39 +354,39 @@ class _MessageScreenState extends State<MessageScreen> {
           ),
           !isSameUser
               ? Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: <Widget>[
-              Text(
-                message.time,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black45,
-                ),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.5),
-                      spreadRadius: 2,
-                      blurRadius: 5,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    Text(
+                      message.time,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.black45,
+                      ),
+                    ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.5),
+                            spreadRadius: 2,
+                            blurRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: CircleAvatar(
+                        radius: 15,
+                        backgroundImage: AssetImage('P.jpg}'),
+                      ),
                     ),
                   ],
-                ),
-                child: CircleAvatar(
-                  radius: 15,
-                  backgroundImage: AssetImage('P.jpg}'),
-                ),
-              ),
-            ],
-          )
+                )
               : Container(
-            child: null,
-          ),
+                  child: null,
+                ),
         ],
       );
     } else {
@@ -391,38 +421,38 @@ class _MessageScreenState extends State<MessageScreen> {
           ),
           !isSameUser
               ? Row(
-            children: <Widget>[
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.5),
-                      spreadRadius: 2,
-                      blurRadius: 5,
+                  children: <Widget>[
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.5),
+                            spreadRadius: 2,
+                            blurRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: CircleAvatar(
+                        radius: 15,
+                        backgroundImage: AssetImage('P.jpg'),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Text(
+                      message.time,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.black45,
+                      ),
                     ),
                   ],
-                ),
-                child: CircleAvatar(
-                  radius: 15,
-                  backgroundImage: AssetImage('P.jpg'),
-                ),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Text(
-                message.time,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black45,
-                ),
-              ),
-            ],
-          )
+                )
               : Container(
-            child: null,
-          ),
+                  child: null,
+                ),
         ],
       );
     }
@@ -435,25 +465,21 @@ class _MessageScreenState extends State<MessageScreen> {
       color: Colors.white,
       child: Row(
         children: <Widget>[
-          IconButton(
-            icon: Icon(Icons.photo),
-            iconSize: 25,
-            color: Theme.of(context).primaryColor,
-            onPressed: () {},
-          ),
           Expanded(
-            child: TextField(
-              decoration: InputDecoration.collapsed(
-                hintText: 'Send a message..',
-              ),
-              textCapitalization: TextCapitalization.sentences,
+            child: TextFormField(
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              onChanged: (val) => message = val,
+              decoration: ThemeHelper()
+                  .textInputDecoration('Message', 'Enter your Message'),
             ),
           ),
           IconButton(
             icon: Icon(Icons.send),
             iconSize: 25,
             color: Theme.of(context).primaryColor,
-            onPressed: () {},
+            onPressed: () {
+              sendMessage();
+            },
           ),
         ],
       ),
