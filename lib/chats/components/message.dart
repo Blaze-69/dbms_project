@@ -21,23 +21,21 @@ class MessageScreen extends StatefulWidget {
   _MessageScreenState createState() => _MessageScreenState();
 }
 
-class StreamSocket{
+class StreamSocket {
   static final _socketResponse = StreamController.broadcast();
 
-  void addResponse(messages){
-    Message message = messageFromJson(jsonEncode(messages));
-    print("printmessage");
-    print(message);
-    _socketResponse.add([message]);
+  void addResponse(messages) {
+    print("printmessage length");
+    print(messages.length);
+    _socketResponse.add(messages);
   }
 
   Stream get getResponse => _socketResponse.stream;
 
-  void dispose(){
+  void dispose() {
     _socketResponse.close();
   }
 }
-
 
 class _MessageScreenState extends State<MessageScreen> {
   IO.Socket socket;
@@ -55,9 +53,9 @@ class _MessageScreenState extends State<MessageScreen> {
   void _connect() async {
     currentUser = await GlobalHelper.fetchCurrentUser();
     group_id = await _fetchGroupId();
-    // await _fetchMessages();
+    await _fetchMessages();
 
-    socket = IO.io("http://192.168.1.9:5000", <String, dynamic>{
+    socket = IO.io("http://192.168.1.5:5000", <String, dynamic>{
       "transports": ["websocket"],
       "autoConnect": false,
     });
@@ -66,7 +64,13 @@ class _MessageScreenState extends State<MessageScreen> {
       print('connected to websocket');
     });
     socket.emit('openGroup', {"group_id": group_id});
-    socket.on('sendMessage', (data) => streamSocket.addResponse(data));
+    socket.on('sendMessage', (data) {
+      print("data is rinting");
+      print(data);
+      List<Message> tempMessage = [];
+      tempMessage.add(messageFromJson(jsonEncode(data)));
+      streamSocket.addResponse(tempMessage);
+    });
   }
 
   // void receiveMessage(data){
@@ -89,9 +93,10 @@ class _MessageScreenState extends State<MessageScreen> {
 
   List<Message> parseList(String responseBody) {
     final parsed =
-    jsonDecode(responseBody)["messagesList"].cast<Map<String, dynamic>>();
+        jsonDecode(responseBody)["messagesList"].cast<Map<String, dynamic>>();
     return parsed.map<Message>((json) => Message.fromJson(json)).toList();
   }
+
   _fetchMessages() async {
     String link = 'http://localhost:5000/api/messages/${group_id}';
     final response = await GlobalHelper.checkAccessTokenForGet(link);
@@ -221,7 +226,7 @@ class _MessageScreenState extends State<MessageScreen> {
     int prevUserId;
     return ChatScreenScaffold(
       body: FutureBuilder(
-        future:(widget.type == 'single') ? _fetchUser() : _fetchGroup(),
+        future: (widget.type == 'single') ? _fetchUser() : _fetchGroup(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.hasData) {
@@ -305,38 +310,44 @@ class _MessageScreenState extends State<MessageScreen> {
                   body: Column(
                     children: <Widget>[
                       Expanded(
-                        child: StreamBuilder(
-                          stream: streamSocket.getResponse,
-                          builder: (context, AsyncSnapshot snapshot){
-                            print(snapshot);
-                            if(snapshot.connectionState == ConnectionState.active){
-                              if(snapshot.hasData){
-                                messageList.addAll(snapshot.data);
-                                return ListView.builder(
-                                  controller: _controller,
-                                  scrollDirection: Axis.vertical,
-                                  shrinkWrap: true,
-                                  cacheExtent: 1000,
-                                  padding: EdgeInsets.all(20),
-                                  itemCount: messageList.length,
-                                  itemBuilder: (BuildContext context, int index) {
-                                    final Message message = messageList[index];
-                                    final bool isMe = message.fromUser == currentUser.userId;
-                                    final bool isSameUser = prevUserId == message.fromUser;
-                                    prevUserId = message.fromUser;
-                                    return _chatBubble(message, isMe, isSameUser);
-                                  },
+                          child: StreamBuilder(
+                              stream: streamSocket.getResponse,
+                              builder: (context, AsyncSnapshot snapshot) {
+                                print(snapshot);
+                                if (snapshot.connectionState ==
+                                    ConnectionState.active) {
+                                  if (snapshot.hasData) {
+                                    messageList.addAll(snapshot.data);
+                                    messageList = messageList.reversed.toList();
+                                    return ListView.builder(
+                                      controller: _controller,
+                                      scrollDirection: Axis.vertical,
+                                      shrinkWrap: true,
+                                      reverse: true,
+                                      cacheExtent: 1000,
+                                      padding: EdgeInsets.all(20),
+                                      itemCount: messageList.length,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        final Message message =
+                                            messageList[index];
+                                        final bool isMe = message.fromUser ==
+                                            currentUser.userId;
+                                        final bool isSameUser =
+                                            prevUserId == message.fromUser;
+                                        prevUserId = message.fromUser;
+                                        return _chatBubble(
+                                            message, isMe, isSameUser);
+                                      },
+                                    );
+                                  }
+                                }
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.deepOrange,
+                                  ),
                                 );
-                              }
-                            }
-                            return Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.deepOrange,
-                              ),
-                            );
-                          }
-                        )
-                      ),
+                              })),
                       _sendMessageArea(snapshot),
                     ],
                   ),
@@ -420,19 +431,21 @@ class _MessageScreenState extends State<MessageScreen> {
                   body: Column(
                     children: <Widget>[
                       Expanded(
-                                child: ListView.builder(
-                                  reverse: true,
-                                  padding: EdgeInsets.all(20),
-                                  itemCount: messageList.length,
-                                  itemBuilder: (BuildContext context, int index) {
-                                    final Message message = messageList[index];
-                                    final bool isMe = message.fromUser == currentUser.userId;
-                                    final bool isSameUser = prevUserId == message.fromUser;
-                                    prevUserId = message.fromUser;
-                                    return _chatBubble(message, isMe, isSameUser);
-                                  },
-                                ),
-                              ),
+                        child: ListView.builder(
+                          reverse: true,
+                          padding: EdgeInsets.all(20),
+                          itemCount: messageList.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final Message message = messageList[index];
+                            final bool isMe =
+                                message.fromUser == currentUser.userId;
+                            final bool isSameUser =
+                                prevUserId == message.fromUser;
+                            prevUserId = message.fromUser;
+                            return _chatBubble(message, isMe, isSameUser);
+                          },
+                        ),
+                      ),
                       _sendMessageArea(snapshot),
                     ],
                   ),
@@ -454,134 +467,174 @@ class _MessageScreenState extends State<MessageScreen> {
     if (isMe) {
       return Column(
         children: <Widget>[
-          Container(
-            alignment: Alignment.topRight,
-            child: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.80,
-              ),
-              padding: EdgeInsets.all(10),
-              margin: EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
-                    spreadRadius: 2,
-                    blurRadius: 5,
+          Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+            Container(
+                alignment: Alignment.topRight,
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.80,
                   ),
-                ],
-              ),
-              child: Text(
-                message.body,
-                style: TextStyle(
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
+                  padding: EdgeInsets.all(10),
+                  margin: EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor,
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.5),
+                        spreadRadius: 2,
+                        blurRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    message.body,
+                    style: TextStyle(
+                      color: Colors.black54,
+                    ),
+                  ),
+                )),
+            PopupMenuButton<String>(
+              onSelected: (val) {
+                context.vxNav.push(
+                  Uri(path: Routes.deleteAndUpdate, queryParameters: {
+                    "type": val,
+                    "msgId": message.msgId.toString(),
+                    "body": message.body
+                  }),
+                );
+              },
+              itemBuilder: (BuildContext context) {
+                return {'Delete', 'Edit'}.map((String choice) {
+                  return PopupMenuItem<String>(
+                    value: choice,
+                    child: Text(choice),
+                  );
+                }).toList();
+              },
+            )
+          ]),
           !isSameUser
               ? Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: <Widget>[
-              Text(
-                message.fromUser.toString(),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black45,
-                ),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.5),
-                      spreadRadius: 2,
-                      blurRadius: 5,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    Text(
+                      message.fromUser.toString(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.black45,
+                      ),
+                    ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.5),
+                            spreadRadius: 2,
+                            blurRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: CircleAvatar(
+                        radius: 15,
+                        backgroundImage: AssetImage('P.jpg'),
+                      ),
                     ),
                   ],
-                ),
-                child: CircleAvatar(
-                  radius: 15,
-                  backgroundImage: AssetImage('P.jpg'),
-                ),
-              ),
-            ],
-          )
+                )
               : Container(
-            child: null,
-          ),
+                  child: null,
+                ),
         ],
       );
     } else {
       return Column(
         children: <Widget>[
-          Container(
-            alignment: Alignment.topLeft,
-            child: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.80,
-              ),
-              padding: EdgeInsets.all(10),
-              margin: EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
-                    spreadRadius: 2,
-                    blurRadius: 5,
+          Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+            Container(
+                alignment: Alignment.topRight,
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.80,
                   ),
-                ],
-              ),
-              child: Text(
-                message.body,
-                style: TextStyle(
-                  color: Colors.black54,
-                ),
-              ),
-            ),
-          ),
+                  padding: EdgeInsets.all(10),
+                  margin: EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor,
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.5),
+                        spreadRadius: 2,
+                        blurRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    message.body,
+                    style: TextStyle(
+                      color: Colors.black54,
+                    ),
+                  ),
+                )),
+            PopupMenuButton<String>(
+              onSelected: (val) {
+                context.vxNav.push(
+                  Uri(path: Routes.deleteAndUpdate, queryParameters: {
+                    "type": val,
+                    "msgId": message.msgId.toString(),
+                    "body": message.body
+                  }),
+                );
+              },
+              itemBuilder: (BuildContext context) {
+                return {'Delete'}.map((String choice) {
+                  return PopupMenuItem<String>(
+                    value: choice,
+                    child: Text(choice),
+                  );
+                }).toList();
+              },
+            )
+          ]),
           !isSameUser
               ? Row(
-            children: <Widget>[
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.5),
-                      spreadRadius: 2,
-                      blurRadius: 5,
+                  children: <Widget>[
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.5),
+                            spreadRadius: 2,
+                            blurRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: CircleAvatar(
+                        radius: 15,
+                        backgroundImage: AssetImage('P.jpg'),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Text(
+                      message.fromUser.toString(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.black45,
+                      ),
                     ),
                   ],
-                ),
-                child: CircleAvatar(
-                  radius: 15,
-                  backgroundImage: AssetImage('P.jpg'),
-                ),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Text(
-                message.fromUser.toString(),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black45,
-                ),
-              ),
-            ],
-          )
+                )
               : Container(
-            child: null,
-          ),
+                  child: null,
+                ),
         ],
       );
     }
@@ -597,7 +650,7 @@ class _MessageScreenState extends State<MessageScreen> {
         children: <Widget>[
           Expanded(
             child: TextFormField(
-              controller: _messageController ,
+              controller: _messageController,
               autovalidateMode: AutovalidateMode.onUserInteraction,
               onChanged: (val) => message = val,
               decoration: ThemeHelper()
@@ -636,16 +689,16 @@ class Message {
   int fromUser;
 
   factory Message.fromJson(Map<String, dynamic> json) => Message(
-    body: json["body"] == null ? null : json["body"],
-    msgId: json["msg_id"] == null ? null : json["msg_id"],
-    toUser: json["to_user"] == null ? null : json["to_user"],
-    fromUser: json["from_user"] == null ? null : json["from_user"],
-  );
+        body: json["body"] == null ? null : json["body"],
+        msgId: json["msg_id"] == null ? null : json["msg_id"],
+        toUser: json["to_user"] == null ? null : json["to_user"],
+        fromUser: json["from_user"] == null ? null : json["from_user"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "body": body == null ? null : body,
-    "msg_id": msgId == null ? null : msgId,
-    "to_user": toUser == null ? null : toUser,
-    "from_user": fromUser == null ? null : fromUser,
-  };
+        "body": body == null ? null : body,
+        "msg_id": msgId == null ? null : msgId,
+        "to_user": toUser == null ? null : toUser,
+        "from_user": fromUser == null ? null : fromUser,
+      };
 }

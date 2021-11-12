@@ -16,4 +16,6 @@ class Routes {
   static String searchGroup = '/search/group';
   static String resetPassword = '/resetPassword';
   static String createGroup = '/group/create';
+  static String admin = '/admin';
+  static String deleteAndUpdate = '/message/deleteOrUpdate';
 }
