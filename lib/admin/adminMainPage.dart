@@ -50,19 +50,19 @@ class _AdminViewState extends State<AdminView>
             onTap: (index) {
               if (index == 0)
                 context.vxNav.push(
-                  Uri(path: Routes.chatScreen, fragment: 'allusers'),
+                  Uri(path: Routes.admin, fragment: 'allusers'),
                 );
               else if (index == 1)
                 context.vxNav.push(
-                  Uri(path: Routes.chatScreen, fragment: 'allgroups'),
+                  Uri(path: Routes.admin, fragment: 'allgroups'),
                 );
               else if (index == 2)
                 context.vxNav.push(
-                  Uri(path: Routes.chatScreen, fragment: 'allsongs'),
+                  Uri(path: Routes.admin, fragment: 'allsongs'),
                 );
               else if (index == 3)
                 context.vxNav.push(
-                  Uri(path: Routes.chatScreen, fragment: 'allartists'),
+                  Uri(path: Routes.admin, fragment: 'allartists'),
                 );
             },
             tabs: [

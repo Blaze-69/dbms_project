@@ -25,8 +25,6 @@ class StreamSocket {
   static final _socketResponse = StreamController.broadcast();
 
   void addResponse(messages) {
-    print("printmessage length");
-    print(messages.length);
     _socketResponse.add(messages);
   }
 
@@ -48,14 +46,19 @@ class _MessageScreenState extends State<MessageScreen> {
   TextEditingController _messageController;
   ScrollController _controller;
   final AsyncMemoizer _memoizer = AsyncMemoizer();
+  final AsyncMemoizer _messageMemoizer = AsyncMemoizer();
   List<Message> messageList = [];
+
 
   void _connect() async {
     currentUser = await GlobalHelper.fetchCurrentUser();
-    group_id = await _fetchGroupId();
-    await _fetchMessages();
-
-    socket = IO.io("http://192.168.1.5:5000", <String, dynamic>{
+    if(widget.type == 'single') {
+      group_id = await _fetchGroupId();
+    }
+    else {
+      group_id = widget.to_user_id;
+    }
+    socket = IO.io("http://192.168.1.9:5000", <String, dynamic>{
       "transports": ["websocket"],
       "autoConnect": false,
     });
@@ -65,9 +68,7 @@ class _MessageScreenState extends State<MessageScreen> {
     });
     socket.emit('openGroup', {"group_id": group_id});
     socket.on('sendMessage', (data) {
-      print("data is rinting");
-      print(data);
-      List<Message> tempMessage = [];
+      List<Message>  tempMessage = [];
       tempMessage.add(messageFromJson(jsonEncode(data)));
       streamSocket.addResponse(tempMessage);
     });
@@ -98,28 +99,36 @@ class _MessageScreenState extends State<MessageScreen> {
   }
 
   _fetchMessages() async {
-    String link = 'http://localhost:5000/api/messages/${group_id}';
-    final response = await GlobalHelper.checkAccessTokenForGet(link);
-    if (response.statusCode == 400) {
-      var responseJson = json.decode(response.body);
-      if (responseJson['msg'] == "Access token expired") {
-        await GlobalHelper.refresh();
-        return _fetchGroup();
-      } else {
-        Fluttertoast.showToast(
-            msg: responseJson['msg'],
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 2,
-            backgroundColor: Colors.red,
-            webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
-            textColor: Colors.white,
-            fontSize: 16.0);
+    return this._messageMemoizer.runOnce(() async {
+      if (widget.type == 'single') {
+        group_id = await _fetchGroupId();
       }
-    } else {
-      var list = parseList(response.body);
-      streamSocket.addResponse(list);
-    }
+      else {
+        group_id = widget.to_user_id;
+      }
+      String link = 'http://localhost:5000/api/messages/${group_id }';
+      final response = await GlobalHelper.checkAccessTokenForGet(link);
+      if (response.statusCode == 400) {
+        var responseJson = json.decode(response.body);
+        if (responseJson['msg'] == "Access token expired") {
+          await GlobalHelper.refresh();
+          return _fetchGroup();
+        } else {
+          Fluttertoast.showToast(
+              msg: responseJson['msg'],
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              timeInSecForIosWeb: 2,
+              backgroundColor: Colors.red,
+              webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
+              textColor: Colors.white,
+              fontSize: 16.0);
+        }
+      } else {
+        var list = parseList(response.body);
+        return list;
+      }
+    });
   }
 
   Future _fetchGroup() async {
@@ -205,6 +214,32 @@ class _MessageScreenState extends State<MessageScreen> {
     });
   }
 
+  Future _fetchGroupUser(userId) async {
+      String link = 'http://localhost:5000/api/user/${userId}';
+      final response = await GlobalHelper.checkAccessTokenForGet(link);
+      if (response.statusCode == 400) {
+        var responseJson = json.decode(response.body);
+        if (responseJson['msg'] == "Access token expired") {
+          await GlobalHelper.refresh();
+          return _fetchUser();
+        } else {
+          Fluttertoast.showToast(
+              msg: responseJson['msg'],
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              timeInSecForIosWeb: 2,
+              backgroundColor: Colors.red,
+              webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
+              textColor: Colors.white,
+              fontSize: 16.0);
+        }
+      } else {
+        var responseJson = json.decode(response.body);
+        User user = userFromJson(json.encode(responseJson['user']));
+        return user;
+      }
+  }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -230,7 +265,136 @@ class _MessageScreenState extends State<MessageScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.hasData) {
-              if (widget.type == 'single') {
+              if (widget.type == 'group') {
+                Group group = snapshot.data;
+                return Scaffold(
+                  backgroundColor: Color(0xFFF6F6F6),
+                  appBar: AppBar(
+                    automaticallyImplyLeading: false,
+                    brightness: Brightness.dark,
+                    centerTitle: true,
+                    title: RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                              text: group.name,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                              )),
+                          TextSpan(
+                              text: '\n' + group.artist,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                              )),
+                          // widget.user.isOnline
+                          //     ? TextSpan(
+                          //   text: 'Online',
+                          //   style: TextStyle(
+                          //     fontSize: 11,
+                          //     fontWeight: FontWeight.w400,
+                          //   ),
+                          // )
+                          //     : TextSpan(
+                          //   text: 'Offline',
+                          //   style: TextStyle(
+                          //     fontSize: 11,
+                          //     fontWeight: FontWeight.w400,
+                          //   ),
+                          // )
+                        ],
+                      ),
+                    ),
+                    actions: [
+                      PopupMenuButton<String>(
+                        onSelected: (val) {
+                          switch (val) {
+                            case 'GroupInfo':
+                              {
+                                context.vxNav.push(
+                                  Uri(path: Routes.editGroup, queryParameters: {
+                                    "id": group.group_id.toString()
+                                  }),
+                                );
+                              }
+                              break;
+                            default:
+                              {
+                                context.vxNav.push(
+                                  Uri(path: Routes.editGroup, queryParameters: {
+                                    "id": group.group_id.toString()
+                                  }),
+                                );
+                              }
+                          }
+                        },
+                        itemBuilder: (BuildContext context) {
+                          return {'GroupInfo'}.map((String choice) {
+                            return PopupMenuItem<String>(
+                              value: choice,
+                              child: Text(choice),
+                            );
+                          }).toList();
+                        },
+                      ),
+                    ],
+                  ),
+                  body: Column(
+                    children: <Widget>[
+                      Expanded(
+                          child: FutureBuilder(
+                            future: _fetchMessages(),
+                            builder: (context,messageSnapshot){
+                              if(messageSnapshot.connectionState == ConnectionState.done){
+                                if(messageSnapshot.hasData){
+                                  return StreamBuilder(
+                                      stream: streamSocket.getResponse,
+                                      initialData: messageSnapshot.data,
+                                      builder: (context, AsyncSnapshot streamSnapshot){
+                                        if(streamSnapshot.hasData){
+                                          messageList.addAll(streamSnapshot.data);
+                                          List<Message> tempMessageList = messageList.reversed.toList();
+                                          return ListView.builder(
+                                            controller: _controller,
+                                            scrollDirection: Axis.vertical,
+                                            shrinkWrap: true,
+                                            reverse: true,
+                                            cacheExtent: 1000,
+                                            padding: EdgeInsets.all(20),
+                                            itemCount: tempMessageList.length,
+                                            itemBuilder: (BuildContext context, int index) {
+                                              final Message message = tempMessageList[index];
+                                              final bool isMe = message.fromUser == currentUser.userId;
+                                              final bool isSameUser = prevUserId == message.fromUser;
+                                              prevUserId = message.fromUser;
+                                              return _chatBubble(message, isMe, isSameUser);
+                                            },
+                                          );
+                                        }
+                                        return Center(
+                                          child: CircularProgressIndicator(
+                                            color: Colors.deepOrange,
+                                          ),
+                                        );
+                                      }
+                                  );
+                                }
+                              }
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.deepOrange,
+                                ),
+                              );
+                            },
+                          )
+                      ),
+                      _sendMessageArea(),
+                    ],
+                  ),
+                );
+              } else {
                 User user = snapshot.data;
                 return Scaffold(
                   backgroundColor: Color(0xFFF6F6F6),
@@ -310,143 +474,56 @@ class _MessageScreenState extends State<MessageScreen> {
                   body: Column(
                     children: <Widget>[
                       Expanded(
-                          child: StreamBuilder(
-                              stream: streamSocket.getResponse,
-                              builder: (context, AsyncSnapshot snapshot) {
-                                print(snapshot);
-                                if (snapshot.connectionState ==
-                                    ConnectionState.active) {
-                                  if (snapshot.hasData) {
-                                    messageList.addAll(snapshot.data);
-                                    messageList = messageList.reversed.toList();
-                                    return ListView.builder(
-                                      controller: _controller,
-                                      scrollDirection: Axis.vertical,
-                                      shrinkWrap: true,
-                                      reverse: true,
-                                      cacheExtent: 1000,
-                                      padding: EdgeInsets.all(20),
-                                      itemCount: messageList.length,
-                                      itemBuilder:
-                                          (BuildContext context, int index) {
-                                        final Message message =
-                                            messageList[index];
-                                        final bool isMe = message.fromUser ==
-                                            currentUser.userId;
-                                        final bool isSameUser =
-                                            prevUserId == message.fromUser;
-                                        prevUserId = message.fromUser;
-                                        return _chatBubble(
-                                            message, isMe, isSameUser);
-                                      },
-                                    );
-                                  }
+                          child: FutureBuilder(
+                            future: _fetchMessages(),
+                            builder: (context,messageSnapshot){
+                              print("Future");
+                              print(messageSnapshot);
+                              if(messageSnapshot.connectionState == ConnectionState.done){
+                                if(messageSnapshot.hasData){
+                                  return StreamBuilder(
+                                      stream: streamSocket.getResponse,
+                                      initialData: messageSnapshot.data,
+                                      builder: (context, AsyncSnapshot snapshot){
+                                        print(snapshot);
+                                        if(snapshot.hasData){
+                                            messageList.addAll(snapshot.data);
+                                            List<Message> tempMessageList = messageList.reversed.toList();
+                                            return ListView.builder(
+                                              controller: _controller,
+                                              scrollDirection: Axis.vertical,
+                                              shrinkWrap: true,
+                                              reverse: true,
+                                              cacheExtent: 1000,
+                                              padding: EdgeInsets.all(20),
+                                              itemCount: tempMessageList.length,
+                                              itemBuilder: (BuildContext context, int index) {
+                                                final Message message = tempMessageList[index];
+                                                final bool isMe = message.fromUser == currentUser.userId;
+                                                final bool isSameUser = prevUserId == message.fromUser;
+                                                prevUserId = message.fromUser;
+                                                return _chatBubble(message, isMe, isSameUser);
+                                              },
+                                            );
+                                          }
+                                        return Center(
+                                          child: CircularProgressIndicator(
+                                            color: Colors.deepOrange,
+                                          ),
+                                        );
+                                      }
+                                  );
                                 }
-                                return Center(
-                                  child: CircularProgressIndicator(
-                                    color: Colors.deepOrange,
-                                  ),
-                                );
-                              })),
-                      _sendMessageArea(snapshot),
-                    ],
-                  ),
-                );
-              } else {
-                Group group = snapshot.data;
-                return Scaffold(
-                  backgroundColor: Color(0xFFF6F6F6),
-                  appBar: AppBar(
-                    automaticallyImplyLeading: false,
-                    brightness: Brightness.dark,
-                    centerTitle: true,
-                    title: RichText(
-                      textAlign: TextAlign.center,
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                              text: group.name,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                              )),
-                          TextSpan(
-                              text: '\n' + group.artist,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                              )),
-                          // widget.user.isOnline
-                          //     ? TextSpan(
-                          //   text: 'Online',
-                          //   style: TextStyle(
-                          //     fontSize: 11,
-                          //     fontWeight: FontWeight.w400,
-                          //   ),
-                          // )
-                          //     : TextSpan(
-                          //   text: 'Offline',
-                          //   style: TextStyle(
-                          //     fontSize: 11,
-                          //     fontWeight: FontWeight.w400,
-                          //   ),
-                          // )
-                        ],
-                      ),
-                    ),
-                    actions: [
-                      PopupMenuButton<String>(
-                        onSelected: (val) {
-                          switch (val) {
-                            case 'GroupInfo':
-                              {
-                                context.vxNav.push(
-                                  Uri(path: Routes.editGroup, queryParameters: {
-                                    "id": group.group_id.toString()
-                                  }),
-                                );
                               }
-                              break;
-                            default:
-                              {
-                                context.vxNav.push(
-                                  Uri(path: Routes.editGroup, queryParameters: {
-                                    "id": group.group_id.toString()
-                                  }),
-                                );
-                              }
-                          }
-                        },
-                        itemBuilder: (BuildContext context) {
-                          return {'GroupInfo'}.map((String choice) {
-                            return PopupMenuItem<String>(
-                              value: choice,
-                              child: Text(choice),
-                            );
-                          }).toList();
-                        },
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.deepOrange,
+                                ),
+                              );
+                            },
+                          )
                       ),
-                    ],
-                  ),
-                  body: Column(
-                    children: <Widget>[
-                      Expanded(
-                        child: ListView.builder(
-                          reverse: true,
-                          padding: EdgeInsets.all(20),
-                          itemCount: messageList.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            final Message message = messageList[index];
-                            final bool isMe =
-                                message.fromUser == currentUser.userId;
-                            final bool isSameUser =
-                                prevUserId == message.fromUser;
-                            prevUserId = message.fromUser;
-                            return _chatBubble(message, isMe, isSameUser);
-                          },
-                        ),
-                      ),
-                      _sendMessageArea(snapshot),
+                      _sendMessageArea(),
                     ],
                   ),
                 );
@@ -490,7 +567,7 @@ class _MessageScreenState extends State<MessageScreen> {
                   child: Text(
                     message.body,
                     style: TextStyle(
-                      color: Colors.black54,
+                      color: Colors.white,
                     ),
                   ),
                 )),
@@ -518,12 +595,29 @@ class _MessageScreenState extends State<MessageScreen> {
               ? Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: <Widget>[
-                    Text(
-                      message.fromUser.toString(),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.black45,
-                      ),
+                    FutureBuilder(
+                      future: _fetchGroupUser(message.fromUser),
+                      builder: (context,snapshot){
+                        if(snapshot.connectionState == ConnectionState.done){
+                          if(snapshot.hasData){
+                            User fromUser = snapshot.data;
+                            return Text(
+                              fromUser.name,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black45,
+                              ),
+                            );
+                          }
+                        }
+                        return Text(
+                          "Me",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.black45,
+                          ),
+                        );
+                      },
                     ),
                     SizedBox(
                       width: 10,
@@ -564,7 +658,7 @@ class _MessageScreenState extends State<MessageScreen> {
                   padding: EdgeInsets.all(10),
                   margin: EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(15),
                     boxShadow: [
                       BoxShadow(
@@ -623,12 +717,29 @@ class _MessageScreenState extends State<MessageScreen> {
                     SizedBox(
                       width: 10,
                     ),
-                    Text(
-                      message.fromUser.toString(),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.black45,
-                      ),
+                    FutureBuilder(
+                      future: _fetchGroupUser(message.fromUser),
+                      builder: (context,snapshot){
+                        if(snapshot.connectionState == ConnectionState.done){
+                          if(snapshot.hasData){
+                            User fromUser = snapshot.data;
+                            return Text(
+                              fromUser.name,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black45,
+                              ),
+                            );
+                          }
+                        }
+                        return Text(
+                          "Other",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.black45,
+                          ),
+                        );
+                      },
                     ),
                   ],
                 )
@@ -640,8 +751,7 @@ class _MessageScreenState extends State<MessageScreen> {
     }
   }
 
-  _sendMessageArea(snapshot) {
-    snapshot.inState(ConnectionState.done);
+  _sendMessageArea() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8),
       height: 70,
@@ -650,7 +760,11 @@ class _MessageScreenState extends State<MessageScreen> {
         children: <Widget>[
           Expanded(
             child: TextFormField(
-              controller: _messageController,
+              textInputAction: TextInputAction.go,
+              onFieldSubmitted: (val){
+                sendMessage();
+              },
+              controller: _messageController ,
               autovalidateMode: AutovalidateMode.onUserInteraction,
               onChanged: (val) => message = val,
               decoration: ThemeHelper()
@@ -696,9 +810,9 @@ class Message {
       );
 
   Map<String, dynamic> toJson() => {
-        "body": body == null ? null : body,
-        "msg_id": msgId == null ? null : msgId,
-        "to_user": toUser == null ? null : toUser,
-        "from_user": fromUser == null ? null : fromUser,
-      };
+    "body": body == null ? null : body,
+    "msg_id": msgId == null ? null : msgId,
+    "to_user": toUser == null ? null : toUser,
+    "from_user": fromUser == null ? null : fromUser,
+  };
 }

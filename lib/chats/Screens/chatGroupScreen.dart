@@ -24,8 +24,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   Future _fetchGroups() async {
     String link = 'http://localhost:5000/api/groups';
     final response = await GlobalHelper.checkAccessTokenForGet(link);
-
-    print(response.body);
     if (response.statusCode == 400) {
       var responseJson = json.decode(response.body);
       if (responseJson['msg'] == "Access token expired") {
