@@ -46,36 +46,42 @@ class GlobalHelper {
     return response;
   }
 
-  static Future checkAccessTokenForPost(link,body) async {
+  static Future checkAccessTokenForPost(link, body) async {
     String url = link;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final accessToken = await prefs.getString("accessToken");
-    final response = await http.post(Uri.parse(url), headers: {
-      "Authorization": "Bearer $accessToken",
-      "Content-Type": "application/json",
-    },body: json.encode(body));
+    final response = await http.post(Uri.parse(url),
+        headers: {
+          "Authorization": "Bearer $accessToken",
+          "Content-Type": "application/json",
+        },
+        body: json.encode(body));
     return response;
   }
 
-  static Future checkAccessTokenForUpdate(link,body) async {
+  static Future checkAccessTokenForUpdate(link, body) async {
     String url = link;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final accessToken = await prefs.getString("accessToken");
-    final response = await http.put(Uri.parse(url), headers: {
-      "Authorization": "Bearer $accessToken",
-      "Content-Type": "application/json",
-    },body: json.encode(body));
+    final response = await http.put(Uri.parse(url),
+        headers: {
+          "Authorization": "Bearer $accessToken",
+          "Content-Type": "application/json",
+        },
+        body: json.encode(body));
     return response;
   }
 
-  static Future checkAccessTokenForDelete(link,body) async {
+  static Future checkAccessTokenForDelete(link, body) async {
     String url = link;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final accessToken = await prefs.getString("accessToken");
-    final response = await http.delete(Uri.parse(url), headers: {
-      "Authorization": "Bearer $accessToken",
-      "Content-Type": "application/json",
-    },body: json.encode(body));
+    final response = await http.delete(Uri.parse(url),
+        headers: {
+          "Authorization": "Bearer $accessToken",
+          "Content-Type": "application/json",
+        },
+        body: json.encode(body));
     return response;
   }
 
@@ -83,13 +89,12 @@ class GlobalHelper {
     String link = 'http://localhost:5000/api/user';
     http.Response response = await checkAccessTokenForGet(link);
     print(response.body);
-    if (response.statusCode == 400){
+    if (response.statusCode == 400) {
       var responseJson = json.decode(response.body);
       if (responseJson['msg'] == "Access token expired") {
         await refresh();
         return fetchCurrentUser();
-      }
-      else{
+      } else {
         Fluttertoast.showToast(
             msg: responseJson['msg'],
             toastLength: Toast.LENGTH_SHORT,
@@ -99,14 +104,11 @@ class GlobalHelper {
             textColor: Colors.white,
             fontSize: 16.0);
       }
-
+    } else {
+      print(response.body);
+      var responseJson = json.decode(response.body);
+      User user = userFromJson(json.encode(responseJson['user']));
+      return user;
     }
-    else{
-        print(response.body);
-        var responseJson = json.decode(response.body);
-       User user = userFromJson(json.encode(responseJson['user']));
-       return user;
-    }
-
   }
 }
