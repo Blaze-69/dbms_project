@@ -69,6 +69,43 @@ class _EditProfileState extends State<EditProfile> {
     }
   }
 
+  Future deleteAccount() async {
+    String link = 'http://localhost:5000/api/user';
+    final body = {
+    };
+    http.Response response =
+    await GlobalHelper.checkAccessTokenForDelete(link, body);
+    print(response.body);
+    if (response.statusCode == 400) {
+      var responseJson = json.decode(response.body);
+      if (responseJson['msg'] == "Access token expired") {
+        await GlobalHelper.refresh();
+        return deleteAccount();
+      } else {
+        Fluttertoast.showToast(
+            msg: responseJson['msg'],
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.CENTER,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+            fontSize: 16.0);
+      }
+    } else {
+      var responseJson = json.decode(response.body);
+      Fluttertoast.showToast(
+          msg: responseJson['msg'],
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0);
+      context.vxNav.popToRoot();
+      context.vxNav.push(Uri.parse(Routes.loginPage));
+    }
+  }
+
 
   String nameValidator(String name) {
     if (name.isEmpty) {
@@ -272,6 +309,16 @@ class _EditProfileState extends State<EditProfile> {
                 child: ElevatedButton(
                   child: Text("Delete Account"),
                   onPressed: () async {
+                    Loader.show(context,
+                        isSafeAreaOverlay: false,
+                        isAppbarOverlay: true,
+                        isBottomBarOverlay: true,
+                        progressIndicator: CircularProgressIndicator(),
+                        themeData: Theme.of(context)
+                            .copyWith(accentColor: Colors.black38),
+                        overlayColor: Color(0x99E8EAF6));
+                    await deleteAccount();
+                    Loader.hide();
                   },
                 ),
               ),

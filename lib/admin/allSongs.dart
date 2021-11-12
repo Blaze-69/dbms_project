@@ -45,35 +45,31 @@ class _AllSongsState extends State<AllSongs> {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: FutureBuilder(
-        future: _fetchSongs(),
-        builder: (context, AsyncSnapshot snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasData) {
-              List<Song> items = snapshot.data;
-              return Expanded(
-                child: ScrollConfiguration(
-                  behavior: ScrollConfiguration.of(context).copyWith(
-                    dragDevices: {
-                      PointerDeviceKind.touch,
-                      PointerDeviceKind.mouse,
-                    },
-                  ),
-                  child: ListView.builder(
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        return _buildSonglistItem(items[index]);
-                      }),
-                ),
-              );
-            }
+    return FutureBuilder(
+      future: _fetchSongs(),
+      builder: (context, AsyncSnapshot snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.hasData) {
+            List<Song> items = snapshot.data;
+            return ScrollConfiguration(
+              behavior: ScrollConfiguration.of(context).copyWith(
+                dragDevices: {
+                  PointerDeviceKind.touch,
+                  PointerDeviceKind.mouse,
+                },
+              ),
+              child: ListView.builder(
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    return _buildSonglistItem(items[index]);
+                  }),
+            );
           }
-          return Center(
-            child: CircularProgressIndicator(),
-          );
-        },
-      ),
+        }
+        return Center(
+          child: CircularProgressIndicator(),
+        );
+      },
     );
   }
 
