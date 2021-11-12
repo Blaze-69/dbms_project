@@ -1,5 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
-
+import 'package:async/async.dart';
 import 'package:app/globalHelpers/chatScreenScaffold.dart';
 import 'package:app/globalHelpers/global-helper.dart';
 import 'package:app/globalHelpers/routes.dart';
@@ -20,33 +21,134 @@ class MessageScreen extends StatefulWidget {
   _MessageScreenState createState() => _MessageScreenState();
 }
 
+class StreamSocket{
+  static final _socketResponse = StreamController.broadcast();
+
+  void addResponse(messages){
+    Message message = messageFromJson(jsonEncode(messages));
+    print("printmessage");
+    print(message);
+    _socketResponse.add([message]);
+  }
+
+  Stream get getResponse => _socketResponse.stream;
+
+  void dispose(){
+    _socketResponse.close();
+  }
+}
+
+
 class _MessageScreenState extends State<MessageScreen> {
   IO.Socket socket;
   String message = "";
   Future<User> user;
   User currentUser;
+  var group_id;
+  StreamSocket streamSocket = StreamSocket();
+
+  TextEditingController _messageController;
+  ScrollController _controller;
+  final AsyncMemoizer _memoizer = AsyncMemoizer();
+  List<Message> messageList = [];
+
   void _connect() async {
-    socket = IO.io("http://192.168.1.5:5000", <String, dynamic>{
+    currentUser = await GlobalHelper.fetchCurrentUser();
+    group_id = await _fetchGroupId();
+    // await _fetchMessages();
+
+    socket = IO.io("http://192.168.1.9:5000", <String, dynamic>{
       "transports": ["websocket"],
       "autoConnect": false,
     });
     socket.connect();
-    // socket.emit("signIn", {"clientId": "1"});
+    socket.onConnect((_) {
+      print('connected to websocket');
+    });
+    socket.emit('openGroup', {"group_id": group_id});
+    socket.on('sendMessage', (data) => streamSocket.addResponse(data));
   }
 
+  // void receiveMessage(data){
+  //   setState(() {
+  //     Message message = messageFromJson(jsonEncode(data));
+  //     messageList.add(message);
+  //   });
+  // }
   void sendMessage() {
-    socket.emit("message",
-        {"message": message, "from_id": "2", "to_user": widget.to_user_id});
-    setState(() {
-      message = "";
-    });
+    String messageText = _messageController.text.trim();
+    _messageController.text = '';
+    if (messageText != '') {
+      socket.emit("recieveMessage", {
+        "body": messageText,
+        "group_id": group_id,
+        "user_id": currentUser.userId
+      });
+    }
+  }
+
+  List<Message> parseList(String responseBody) {
+    final parsed =
+    jsonDecode(responseBody)["messagesList"].cast<Map<String, dynamic>>();
+    return parsed.map<Message>((json) => Message.fromJson(json)).toList();
+  }
+  _fetchMessages() async {
+    String link = 'http://localhost:5000/api/messages/${group_id}';
+    final response = await GlobalHelper.checkAccessTokenForGet(link);
+    if (response.statusCode == 400) {
+      var responseJson = json.decode(response.body);
+      if (responseJson['msg'] == "Access token expired") {
+        await GlobalHelper.refresh();
+        return _fetchGroup();
+      } else {
+        Fluttertoast.showToast(
+            msg: responseJson['msg'],
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 2,
+            backgroundColor: Colors.red,
+            webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
+            textColor: Colors.white,
+            fontSize: 16.0);
+      }
+    } else {
+      var list = parseList(response.body);
+      streamSocket.addResponse(list);
+    }
   }
 
   Future _fetchGroup() async {
-    print("fetchgroup");
-    String link = 'http://localhost:5000/api/groups/${widget.to_user_id}';
+    return this._memoizer.runOnce(() async {
+      String link = 'http://localhost:5000/api/groups/${widget.to_user_id}';
+      final response = await GlobalHelper.checkAccessTokenForGet(link);
+      if (response.statusCode == 400) {
+        var responseJson = json.decode(response.body);
+        if (responseJson['msg'] == "Access token expired") {
+          await GlobalHelper.refresh();
+          return _fetchGroup();
+        } else {
+          Fluttertoast.showToast(
+              msg: responseJson['msg'],
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              timeInSecForIosWeb: 2,
+              backgroundColor: Colors.red,
+              webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
+              textColor: Colors.white,
+              fontSize: 16.0);
+        }
+      } else {
+        var responseJson = json.decode(response.body);
+        Group group = groupFromJson(json.encode(responseJson['groupDetails']));
+        return group;
+      }
+    });
+  }
+
+  Future _fetchGroupId() async {
+    String link =
+        'http://localhost:5000/api/groups/getGroupId/${widget.to_user_id}';
     final response = await GlobalHelper.checkAccessTokenForGet(link);
-    print(response.body);
     if (response.statusCode == 400) {
       var responseJson = json.decode(response.body);
       if (responseJson['msg'] == "Access token expired") {
@@ -65,43 +167,53 @@ class _MessageScreenState extends State<MessageScreen> {
       }
     } else {
       var responseJson = json.decode(response.body);
-      Group group = groupFromJson(json.encode(responseJson['groupDetails']));
-      return group;
+      var groupId = responseJson['groupId'];
+      return groupId;
     }
   }
 
   Future _fetchUser() async {
-    String link = 'http://localhost:5000/api/user/${widget.to_user_id}';
-    final response = await GlobalHelper.checkAccessTokenForGet(link);
-    if (response.statusCode == 400) {
-      var responseJson = json.decode(response.body);
-      if (responseJson['msg'] == "Access token expired") {
-        await GlobalHelper.refresh();
-        return _fetchUser();
+    return this._memoizer.runOnce(() async {
+      String link = 'http://localhost:5000/api/user/${widget.to_user_id}';
+      final response = await GlobalHelper.checkAccessTokenForGet(link);
+      if (response.statusCode == 400) {
+        var responseJson = json.decode(response.body);
+        if (responseJson['msg'] == "Access token expired") {
+          await GlobalHelper.refresh();
+          return _fetchUser();
+        } else {
+          Fluttertoast.showToast(
+              msg: responseJson['msg'],
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              timeInSecForIosWeb: 2,
+              backgroundColor: Colors.red,
+              webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
+              textColor: Colors.white,
+              fontSize: 16.0);
+        }
       } else {
-        Fluttertoast.showToast(
-            msg: responseJson['msg'],
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 2,
-            backgroundColor: Colors.red,
-            webBgColor: "linear-gradient(to right, #DA0000, #DA0000)",
-            textColor: Colors.white,
-            fontSize: 16.0);
+        var responseJson = json.decode(response.body);
+        User user = userFromJson(json.encode(responseJson['user']));
+        return user;
       }
-    } else {
-      var responseJson = json.decode(response.body);
-      User user = userFromJson(json.encode(responseJson['user']));
-      return user;
-    }
+    });
   }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    user = GlobalHelper.fetchCurrentUser();
+    _messageController = TextEditingController();
+    _controller = ScrollController();
     _connect();
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    socket.disconnect();
+    super.dispose();
   }
 
   @override
@@ -109,12 +221,10 @@ class _MessageScreenState extends State<MessageScreen> {
     int prevUserId;
     return ChatScreenScaffold(
       body: FutureBuilder(
-        future: (widget.type == 'single') ? _fetchUser() : _fetchGroup(),
+        future:(widget.type == 'single') ? _fetchUser() : _fetchGroup(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.hasData) {
-              User user;
-              Group group;
               if (widget.type == 'single') {
                 User user = snapshot.data;
                 return Scaffold(
@@ -194,21 +304,40 @@ class _MessageScreenState extends State<MessageScreen> {
                   ),
                   body: Column(
                     children: <Widget>[
-                      // Expanded(
-                      //   child: ListView.builder(
-                      //     reverse: true,
-                      //     padding: EdgeInsets.all(20),
-                      //     itemCount: messages.length,
-                      //     itemBuilder: (BuildContext context, int index) {
-                      //       final Message message = messages[index];
-                      //       final bool isMe = message.sender.id == currentUser.id;
-                      //       final bool isSameUser = prevUserId == message.sender.id;
-                      //       prevUserId = message.sender.id;
-                      //       return _chatBubble(message, isMe, isSameUser);
-                      //     },
-                      //   ),
-                      // ),
-                      _sendMessageArea(),
+                      Expanded(
+                        child: StreamBuilder(
+                          stream: streamSocket.getResponse,
+                          builder: (context, AsyncSnapshot snapshot){
+                            print(snapshot);
+                            if(snapshot.connectionState == ConnectionState.active){
+                              if(snapshot.hasData){
+                                messageList.addAll(snapshot.data);
+                                return ListView.builder(
+                                  controller: _controller,
+                                  scrollDirection: Axis.vertical,
+                                  shrinkWrap: true,
+                                  cacheExtent: 1000,
+                                  padding: EdgeInsets.all(20),
+                                  itemCount: messageList.length,
+                                  itemBuilder: (BuildContext context, int index) {
+                                    final Message message = messageList[index];
+                                    final bool isMe = message.fromUser == currentUser.userId;
+                                    final bool isSameUser = prevUserId == message.fromUser;
+                                    prevUserId = message.fromUser;
+                                    return _chatBubble(message, isMe, isSameUser);
+                                  },
+                                );
+                              }
+                            }
+                            return Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.deepOrange,
+                              ),
+                            );
+                          }
+                        )
+                      ),
+                      _sendMessageArea(snapshot),
                     ],
                   ),
                 );
@@ -290,21 +419,21 @@ class _MessageScreenState extends State<MessageScreen> {
                   ),
                   body: Column(
                     children: <Widget>[
-                      // Expanded(
-                      //   child: ListView.builder(
-                      //     reverse: true,
-                      //     padding: EdgeInsets.all(20),
-                      //     itemCount: messages.length,
-                      //     itemBuilder: (BuildContext context, int index) {
-                      //       final Message message = messages[index];
-                      //       final bool isMe = message.sender.id == currentUser.id;
-                      //       final bool isSameUser = prevUserId == message.sender.id;
-                      //       prevUserId = message.sender.id;
-                      //       return _chatBubble(message, isMe, isSameUser);
-                      //     },
-                      //   ),
-                      // ),
-                      _sendMessageArea(),
+                      Expanded(
+                                child: ListView.builder(
+                                  reverse: true,
+                                  padding: EdgeInsets.all(20),
+                                  itemCount: messageList.length,
+                                  itemBuilder: (BuildContext context, int index) {
+                                    final Message message = messageList[index];
+                                    final bool isMe = message.fromUser == currentUser.userId;
+                                    final bool isSameUser = prevUserId == message.fromUser;
+                                    prevUserId = message.fromUser;
+                                    return _chatBubble(message, isMe, isSameUser);
+                                  },
+                                ),
+                              ),
+                      _sendMessageArea(snapshot),
                     ],
                   ),
                 );
@@ -345,7 +474,7 @@ class _MessageScreenState extends State<MessageScreen> {
                 ],
               ),
               child: Text(
-                message.text,
+                message.body,
                 style: TextStyle(
                   color: Colors.white,
                 ),
@@ -354,39 +483,39 @@ class _MessageScreenState extends State<MessageScreen> {
           ),
           !isSameUser
               ? Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    Text(
-                      message.time,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.black45,
-                      ),
-                    ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.5),
-                            spreadRadius: 2,
-                            blurRadius: 5,
-                          ),
-                        ],
-                      ),
-                      child: CircleAvatar(
-                        radius: 15,
-                        backgroundImage: AssetImage('P.jpg}'),
-                      ),
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: <Widget>[
+              Text(
+                message.fromUser.toString(),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.black45,
+                ),
+              ),
+              SizedBox(
+                width: 10,
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.5),
+                      spreadRadius: 2,
+                      blurRadius: 5,
                     ),
                   ],
-                )
-              : Container(
-                  child: null,
                 ),
+                child: CircleAvatar(
+                  radius: 15,
+                  backgroundImage: AssetImage('P.jpg'),
+                ),
+              ),
+            ],
+          )
+              : Container(
+            child: null,
+          ),
         ],
       );
     } else {
@@ -412,7 +541,7 @@ class _MessageScreenState extends State<MessageScreen> {
                 ],
               ),
               child: Text(
-                message.text,
+                message.body,
                 style: TextStyle(
                   color: Colors.black54,
                 ),
@@ -421,44 +550,45 @@ class _MessageScreenState extends State<MessageScreen> {
           ),
           !isSameUser
               ? Row(
-                  children: <Widget>[
-                    Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.5),
-                            spreadRadius: 2,
-                            blurRadius: 5,
-                          ),
-                        ],
-                      ),
-                      child: CircleAvatar(
-                        radius: 15,
-                        backgroundImage: AssetImage('P.jpg'),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    Text(
-                      message.time,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.black45,
-                      ),
+            children: <Widget>[
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.5),
+                      spreadRadius: 2,
+                      blurRadius: 5,
                     ),
                   ],
-                )
-              : Container(
-                  child: null,
                 ),
+                child: CircleAvatar(
+                  radius: 15,
+                  backgroundImage: AssetImage('P.jpg'),
+                ),
+              ),
+              SizedBox(
+                width: 10,
+              ),
+              Text(
+                message.fromUser.toString(),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.black45,
+                ),
+              ),
+            ],
+          )
+              : Container(
+            child: null,
+          ),
         ],
       );
     }
   }
 
-  _sendMessageArea() {
+  _sendMessageArea(snapshot) {
+    snapshot.inState(ConnectionState.done);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8),
       height: 70,
@@ -467,6 +597,7 @@ class _MessageScreenState extends State<MessageScreen> {
         children: <Widget>[
           Expanded(
             child: TextFormField(
+              controller: _messageController ,
               autovalidateMode: AutovalidateMode.onUserInteraction,
               onChanged: (val) => message = val,
               decoration: ThemeHelper()
@@ -487,17 +618,34 @@ class _MessageScreenState extends State<MessageScreen> {
   }
 }
 
-class Message {
-  final User sender;
-  final String
-      time; // Would usually be type DateTime or Firebase Timestamp in production apps
-  final String text;
-  final bool unread;
+Message messageFromJson(String str) => Message.fromJson(json.decode(str));
 
+String messageToJson(Message data) => json.encode(data.toJson());
+
+class Message {
   Message({
-    this.sender,
-    this.time,
-    this.text,
-    this.unread,
+    this.body,
+    this.msgId,
+    this.toUser,
+    this.fromUser,
   });
+
+  String body;
+  int msgId;
+  int toUser;
+  int fromUser;
+
+  factory Message.fromJson(Map<String, dynamic> json) => Message(
+    body: json["body"] == null ? null : json["body"],
+    msgId: json["msg_id"] == null ? null : json["msg_id"],
+    toUser: json["to_user"] == null ? null : json["to_user"],
+    fromUser: json["from_user"] == null ? null : json["from_user"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "body": body == null ? null : body,
+    "msg_id": msgId == null ? null : msgId,
+    "to_user": toUser == null ? null : toUser,
+    "from_user": fromUser == null ? null : fromUser,
+  };
 }
