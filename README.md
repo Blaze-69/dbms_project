@@ -32,7 +32,7 @@ Below is the ER Diagram for the application that we have built.
 
 ```sh
 git clone https://github.com/Blaze-69/dbms_project.git
-cd song_app
+cd dbms_project
 ```
 
 ### Install system dependencies
@@ -43,15 +43,15 @@ cd song_app
 flutter pub get
 ```
 
-### Start Server
+### Start web app
 
-- Go to the terminal and start server.
+- Go to the terminal and run.
 
 ```sh
 flutter run
 ```
 
-- Press CTRL-C to shut the server down.
+- Press CTRL-C to shut the WebApp down.
 
 ### HOSTED ON FIREBASE
 
