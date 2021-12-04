@@ -1,16 +1,58 @@
-# app
+# CHIT-CHAT MUSIC APP FRONTEND REPOSITORY
 
-A new Flutter project.
+The Chit-Chat Music App is a chat and networking platform that helps to manage, grow and connect people through music. This platform is the best medium to discover new music, artists, genre and to meet new people having a similar taste in music.  
 
-## Getting Started
+## FEATURES
 
-This project is a starting point for a Flutter application.
+- Add Songs to Favourites
+- Friend, unfriend users
+- Personal Chat with friends
+- Group Chats based on Artist Fan Clubs
+- Authentication and Authorization
+- Search for various groups and users
 
-A few resources to get you started if this is your first Flutter project:
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+## ER DIAGRAM
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Below is the ER Diagram for the application that we have built.
+
+![ER DIAGRAM](https://i.imgur.com/9I06C4Y.png)
+
+
+## INSTALL DEPENDENCIES
+- [Flutter](https://flutter.dev/) 
+- [Dart](https://dart.dev/)
+- [Visual Studio Code](https://code.visualstudio.com/) or any other text editor of your choice.
+
+## SET UP LOCAL ENVIRONMENT
+
+### Get a copy of source code
+
+- Clone the song_app repository.
+
+```sh
+git clone https://github.com/Blaze-69/dbms_project.git
+cd song_app
+```
+
+### Install system dependencies
+
+- Install all the necessary flutter packages.
+
+```sh
+flutter pub get
+```
+
+### Start Server
+
+- Go to the terminal and start server.
+
+```sh
+flutter run
+```
+
+- Press CTRL-C to shut the server down.
+
+### HOSTED ON FIREBASE
+
+[Chit-Chat Music App](https://chit-chat-music.web.app/)
